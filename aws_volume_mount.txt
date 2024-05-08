@@ -1,0 +1,20 @@
+lsblk
+
+sudo lsblk -f
+
+sudo mkfs -t xfs /dev/xvdf #need check formating info!!!!!!!!
+
+sudo mkdir /data
+
+sudo mount /dev/xvdf /data
+
+############ mount ###########
+
+sudo cp /etc/fstab /etc/fstab.orig
+
+sudo blkid
+### add in fstab
+UUID=aebf131c-6957-451e-8d34-ec978d9581ae  /data  xfs  defaults,nofail  0  2
+
+sudo umount /data
+sudo mount -a
