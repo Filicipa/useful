@@ -1,0 +1,11 @@
+pg_dump -h <hostname> -p 5432 -U <username> -Fc -b -v -f <dumpfilelocation.sql> -d  <database_name>
+
+
+-h is the name of source server where you would like to migrate your database.
+-U is the name of the user present on the source server
+-Fc: Sets the output as a custom-format archive suitable for input into pg_restore. !!!binary 
+-b: Include large objects in the dump.
+-v: Specifies verbose mode
+-f: Dump file path
+
+pg_dump -h dec-prod-postgres.c1ddm7iruvj0.eu-central-1.rds.amazonaws.com -p 5432 -U postgres -b -v -f decimated_23_10_23_13_12.sql> -d  postgres

@@ -1,0 +1,2 @@
+crontab -e
+0 3 * * * sudo /bin/bash /home/ubuntu/mongo_backup/backup_script.sh >/dev/null 2>&1

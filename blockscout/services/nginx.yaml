@@ -1,0 +1,22 @@
+services:
+  proxy:
+    image: nginx
+    container_name: proxy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - "../proxy:/etc/nginx/templates" #templates files for nginx conf.d
+      - "../ssl:/etc/nginx/ssl:ro" #ssl certs
+      - "../nginx/nginx.conf:/etc/nginx/nginx.conf:ro" #nginx.conf for manual edit
+      - "../nginx_log:/var/log/nginx" #logs optional
+    # environment:
+    #   BACK_PROXY_PASS: ${BACK_PROXY_PASS:-http://backend:4000}
+    #   FRONT_PROXY_PASS: ${FRONT_PROXY_PASS:-http://frontend:3000}
+    #   ORIGIN_URI: ${ORIGIN_URI:-example.com}
+    #   STATS_URI: ${STATS_URI:-stats.example.com}
+    #   VISULAIZER_URI: ${VISULAIZER_URI:-visulaizer.example.com}
+    env_file:
+      - ../envs/nginx.env
+    ports:
+      - 80:80
+      - 443:443

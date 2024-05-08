@@ -1,0 +1,41 @@
+use admin
+db.createUser({
+  user: "<username>",
+  pwd: "<password>",
+  roles: [
+    { role: "readwrite", db: "admin" },
+    { role: "backup", db: "admin" },
+    { role: "restore", db: "admin" },
+    { role: "clusterMonitor", db: "admin" }
+  ]
+})
+
+use admin
+db.createUser({
+  user: "<username>",
+  pwd: "<password>",
+  roles: [
+    { role: "readWriteAnyDatabase", db: "admin" },
+    { role: "dbAdminAnyDatabase", db: "admin" },
+    { role: "clusterAdmin", db: "admin" }
+  ]
+})
+
+
+use admin
+db.grantRolesToUser("<username>", [
+  { role: "readWriteAnyDatabase", db: "admin" },
+  { role: "dbAdminAnyDatabase", db: "admin" },
+  { role: "clusterAdmin", db: "admin" }
+])
+
+db.updateUser({
+  user: "test",
+  pwd: "pass",
+  roles: [
+    { role: "readwrite", db: "admin" },
+    { role: "backup", db: "admin" },
+    { role: "restore", db: "admin" },
+    { role: "clusterMonitor", db: "admin" }
+  ]
+})
