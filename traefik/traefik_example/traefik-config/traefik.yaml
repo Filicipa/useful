@@ -1,0 +1,53 @@
+#log:
+#  level: DEBUG
+
+accessLog:
+  filePath: "/data/log/access.log"
+  bufferingSize: 100
+  format: json
+
+api:
+  insecure: false
+  dashboard: true
+
+providers:
+  docker:
+    endpoint: unix:///var/run/docker.sock
+    exposedByDefault: false
+    network: hunting-panel
+  file:
+    filename: /config/traefik.config.yaml
+    watch: true
+
+entryPoints:
+  web:
+    address: :80
+    http:
+      redirections:
+        entryPoint:
+          to: secureweb
+          scheme: https
+
+  secureweb:
+    address: :443
+    http:
+      tls:
+        certResolver: le-resolver
+        domains:
+          - main: "test.blaize.technology"
+            sans: "*.test.blaize.technology"
+
+#certificatesResolvers:
+#  le-resolver:
+#    acme:
+#      email: test@google.com
+#      storage: /data/acme.json
+#      httpChallenge:
+#        entryPoint: web
+
+certificatesResolvers:
+  le-resolver:
+    acme:
+      storage: /data/acme.json
+      email: "test@google.com"
+      tlsChallenge: {}
