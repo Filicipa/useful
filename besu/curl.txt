@@ -1,4 +1,0 @@
-curl --location 'https://rdee-rpc.blaize.technology/' \
---header 'Token-id: ngkjldfnhkodmfjlmdfkl;hgjghjrhidsnvmtkhjbgfioblf' \
---header 'Content-Type: application/json' \
---data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["latest", "false"],"id":1}'

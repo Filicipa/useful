@@ -1,0 +1,1 @@
+aws ssm start-session --target i-02a48f34805902b31 --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters host="gingr-prod.conjdonbzhkh.eu-central-1.rds.amazonaws.com",portNumber="5432",localPortNumber="5432"

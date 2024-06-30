@@ -1,2 +1,0 @@
-curl --location 'https://rpc.example.com/' --header 'Content-Type: application/json' --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
-

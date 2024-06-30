@@ -1,0 +1,4 @@
+scp -i D:/Devops/alex-Frankfurt.pem -r D:/Devops/webpage ec2-user@ec2-3-122-195-60.eu-central-1.compute.amazonaws.com:/home/ec2-user/
+
+
+
