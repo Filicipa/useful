@@ -1,0 +1,7 @@
+scp -i /path/to/key.pem -r /path/to/file ec2-user@123.12.12.12:/home/ubuntu/
+
+ssh -i key.pem -N -L 5671:b-ad4bde17-3c73-4096-8b4e-c7de36a91b63.mq.eu-central-1.amazonaws.com:5671 ubuntu@1231321
+
+openssl s_client -connect api.domain.com:443 -tls1
+
+nmap -Pn -p 443 api-webst.decimated.net --script ssl-enum-ciphers
