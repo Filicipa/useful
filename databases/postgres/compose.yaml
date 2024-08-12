@@ -11,17 +11,11 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: example
       POSTGRES_DB: postgres
-    networks:
-      - example
-
-  backend:
-    image: ${IMAGE_NAME:TAG}
-    container_name: backend
-    restart: always
-    ports:
-      - 3000:3000
-    env_file:
-      - backend.env
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
     networks:
       - example
 
