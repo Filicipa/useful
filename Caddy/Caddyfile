@@ -1,0 +1,3 @@
+page.example.com {
+    reverse_proxy backend-dev:3000
+}

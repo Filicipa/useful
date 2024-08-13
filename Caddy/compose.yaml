@@ -1,0 +1,17 @@
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+      - equadyne
+
+networks:
+  equadyne:
+    name: equadyne
+    external: true
