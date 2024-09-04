@@ -1,0 +1,59 @@
+name: SCRAP_AWS_DEV
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    env:
+      name: ${GITHUB_REPOSITORY#*/}"-dev"
+      key: "ssh-key-scrap"
+      stamp: ${GITHUB_SHA}
+      host: ${{ secrets.DEV_AWS_HOST }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up environment variables
+        run: |
+          echo "NODE_ENV=${{ vars.DEV_NODE_ENV }}" >> .env
+          echo "PORT=${{ vars.DEV_PORT }}" >> .env
+
+      - name: Enable buildx
+        run: |
+          sudo docker buildx create --use
+
+      - name: Build docker
+        run: |
+          sudo docker buildx build -t ${{ env.name }}:${{ env.stamp }} --platform linux/arm/v8 --output type=docker .
+      #  --platform linux/amd64,linux/arm64,linux/arm/v8
+      - name: Show images
+        run: |
+          sudo docker images
+
+      - name: Save image
+        run: |
+          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.stamp }}
+
+      - name: Save secret key
+        run: |
+          echo "${{ secrets.DEV_AWS_SSH }}" > ${key}
+          sudo chmod 400 ${key}
+
+      - name: Copy image
+        run: |
+          scp -i ${key} -o "StrictHostKeyChecking no" ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+
+      - name: Start image
+        run: |
+          ssh -i ${key} -o "StrictHostKeyChecking no" ${{ env.host }} ' \
+          sudo docker load -i '${{ env.name }}'.tar; \
+          sudo docker stop '${{ env.name }}' || true; \
+          sudo docker run --log-driver json-file --log-opt max-size=10m --log-opt max-file=1 -d --restart always \
+          -p '${{ vars.DEV_PORT }}':'${{ vars.DEV_PORT }}' --name '${{ env.name }}'-new '${{ env.name }}':'${{ env.stamp }}'; \
+          sudo docker rm '${{ env.name }}' || true; sudo docker rmi $(sudo docker images -q) || true; \
+          sudo docker rename '${{ env.name }}'-new '${{ env.name }}'; rm '${{ env.name }}'-'${{ env.stamp }}'.tar'

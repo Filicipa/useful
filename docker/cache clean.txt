@@ -1,0 +1,4 @@
+# Install required packages to run
+RUN     DEBIAN_FRONTEND=noninteractive apt-get update \
+    &&  DEBIAN_FRONTEND=noninteractive apt-get upgrade -y --fix-missing --no-install-recommends nginx \
+    &&  apt-get clean -y && apt-get autoremove -y && apt-get autoclean -y && rm -r /var/lib/apt/lists/*

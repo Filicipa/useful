@@ -1,0 +1,3 @@
+- name: downcase REPO
+  run: |
+    echo "REPO=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}

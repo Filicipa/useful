@@ -1,2 +1,12 @@
 crontab -e
 0 3 * * * sudo /bin/bash /home/ubuntu/mongo_backup/backup_script.sh >/dev/null 2>&1
+
+mongodump --authenticationDatabase=admin --username="omomo" --password=6J\!V\*xExu\@3F\!ErK --db=test --out ~/back --gzip
+
+кавычек нет в пароле
+
+sudo scp -i key.pem -r ~/back ubuntu@3.78.37.16:/home/ubuntu/
+
+mongorestore --db=test /home/ubuntu/back/test/ --gzip
+
+mongorestore --authenticationDatabase=admin --username="omomo" --password=IKlpdeOD800w73G5uFd1 --db=test --out ~/back --gzip

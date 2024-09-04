@@ -84,7 +84,7 @@ docker stop <CONTAINER_ID>
 
 ### .env Example
 
-```env
+```ini
 RUST_LOG=info
 HOST=0.0.0.0
 PORT=8080
@@ -103,23 +103,23 @@ PROCESS_BLOCKS_WORKER_START_BLOCK=264853590
 
 ### Environment Variables
 
-| Environment Variable                 | Type   | Default Value                    | Description                                                            |
-| ------------------------------------ | ------ | -------------------------------- | ---------------------------------------------------------------------- |
-| `DATABASE_URL`                       | String | -                | Required|
-| `HOST`                               | String | "0.0.0.0"                        | Optional                                                               |
-| `PORT`                               | u16    | 3000                             | Optional                                                               |
-| `NODE_ENV`                           | String | devolop/production               | Optional                                                               |
-| `PG_DBNAME`                          | String | -                                | Required                                                               |
-| `PG_USER`                            | String | -                                | Required                                                               |
-| `PG_PASSWORD`                        | String | -                                | Required                                                               |
-| `PG_HOST`                            | String | -                                | Required                                                               |
-| `PG_PORT`                            | u16    | -                                | Required                                                               |
-| `STREAMINGFAST_JWT`                  | String | -                                | Required (https://substreams.streamingfast.io/documentation/consume/authentication)  |
-| `COINMARKETCAP_API_KEY`              | String | -                                | Required (https://coinmarketcap.com/academy/article/what-is-an-api-key)  |
-| `ZERO_TIME_POINT_TIMESTAMP`          | i64    | -                                | Required                                                               |
-| `ZERO_TIME_POINT_MARKET_CAP`         | f64    | -                                | Required                                                               |
-| `ZERO_TIME_POINT_PRICE`              | f64    | -                                | Required                                                               |
-| `PROCESS_BLOCKS_WORKER_START_BLOCK`  | i64    | -                                | Required                                                               |
+| Environment Variable                | Type   | Default Value      | Description                                                                         |
+| ----------------------------------- | ------ | ------------------ | ----------------------------------------------------------------------------------- |
+| `DATABASE_URL`                      | String | -                  | Required                                                                            |
+| `HOST`                              | String | "0.0.0.0"          | Optional                                                                            |
+| `PORT`                              | u16    | 3000               | Optional                                                                            |
+| `NODE_ENV`                          | String | develop/production | Optional                                                                            |
+| `PG_DBNAME`                         | String | -                  | Required                                                                            |
+| `PG_USER`                           | String | -                  | Required                                                                            |
+| `PG_PASSWORD`                       | String | -                  | Required                                                                            |
+| `PG_HOST`                           | String | -                  | Required                                                                            |
+| `PG_PORT`                           | u16    | -                  | Required                                                                            |
+| `STREAMINGFAST_JWT`                 | String | -                  | Required (https://substreams.streamingfast.io/documentation/consume/authentication) |
+| `COINMARKETCAP_API_KEY`             | String | -                  | Required (https://coinmarketcap.com/academy/article/what-is-an-api-key)             |
+| `ZERO_TIME_POINT_TIMESTAMP`         | i64    | -                  | Required                                                                            |
+| `ZERO_TIME_POINT_MARKET_CAP`        | f64    | -                  | Required                                                                            |
+| `ZERO_TIME_POINT_PRICE`             | f64    | -                  | Required                                                                            |
+| `PROCESS_BLOCKS_WORKER_START_BLOCK` | i64    | -                  | Required                                                                            |
 
 ---
 

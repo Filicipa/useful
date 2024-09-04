@@ -1,0 +1,3 @@
+CMD ["sleep", "infinity"]
+
+docker run -it --rm --entrypoint bash <image_name>

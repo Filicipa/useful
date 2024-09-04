@@ -1,0 +1,14 @@
+    - name: Discord Webhook Action
+      if: ${{ success() }}
+      uses: tsickert/discord-webhook@v6.0.0
+      with:
+        webhook-url: ${{ secrets.WEBHOOK_URL }}
+        content: "<@1085885742175244342> <@527248740810227723> TEST Pipeline success"
+        
+    - name: Notify Discord
+      if: success()
+      uses: discord-actions/message@v2
+      with:
+        webhookUrl: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        message: "Hello, from Github"
+

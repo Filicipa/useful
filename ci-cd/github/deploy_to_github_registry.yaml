@@ -1,0 +1,60 @@
+name: Deploy to Oracle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      - main
+    paths-ignore:
+      - '.github/workflows/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    env:
+      name: ghcr.io/yevhennsorganization/pizza-backend
+      ssh-key: ${{ secrets.SSH_KEY }}
+      stamp: ${GITHUB_SHA}
+      host: ${{ secrets.ORACLE_USER }}"@"${{ secrets.ORACLE_IP }}
+      ghcr_user: $(echo ${{ github.repository_owner }} | tr '[A-Z]' '[a-z]')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+           
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.name }}:${{ env.stamp }}
+          docker tag ${{ env.name }}:${{ env.stamp }} ${{ env.name }}:latest
+
+      - name: Log in to registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+        
+      - name: Push image
+        run: |
+          docker push ${{ env.name }}:latest
+          docker push ${{ env.name }}:${{ env.stamp }}
+
+      - name: Copy image to EC2
+        run: |
+          echo "${{ env.ssh-key }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
+
+      - name: Start image
+        run: |
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ env.ghcr_user }}' --password-stdin; \
+          docker pull '${{ env.name }}':latest && \
+          docker compose -f ~/backend/docker-compose.yaml up -d; \
+          sudo docker image prune -af'
+
+      - name: Delete old packages
+        uses: actions/delete-package-versions@v4
+        with: 
+          package-name: 'pizza-backend'
+          package-type: 'container'
+          min-versions-to-keep: 1
+          ignore-versions: 'latest'

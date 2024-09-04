@@ -1,0 +1,58 @@
+name: Backend deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths-ignore:
+      - ".github/workflows/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      name: ${GITHUB_REPOSITORY#*/}"-dev"
+      key: "ssh_key"
+      tag: ${GITHUB_SHA}
+      host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.name }}:${{ env.tag }}
+
+      - name: Save docker image
+        run: |
+          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
+
+      - name: Copy image to EC2
+        run: |
+          echo "${{ secrets.DEV_SSH_KEY }}" > ${key}
+          sudo chmod 400 ${key}
+          scp -i ${key} -o "StrictHostKeyChecking no" ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+
+      - name: Start image
+        run: |
+          ssh -i ${key} -o "StrictHostKeyChecking no" ${{ env.host }} ' \
+          sudo docker load -i '${{ env.name }}'.tar && \
+          sudo docker stop '${{ env.name }}' ; \
+          sudo docker run -d --restart always -p '${{ vars.PORT }}':'${{ vars.PORT }}' \
+          -e DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+          -e HASHER_IV='${{ secrets.HASHER_IV}}' \
+          -e HASHER_SECRET_KEY='${{ secrets.HASHER_SECRET_KEY }}' \
+          -e REDIS_HOST='${{ secrets.REDIS_HOST }}' \
+          -e REDIS_PORT='${{ secrets.REDIS_PORT }}' \
+          -e REDIS_URL='${{ secrets.REDIS_URL }}' \
+          -e REDIS_JWT_REFRESH_EXPIRATION='${{ secrets.REDIS_JWT_REFRESH_EXPIRATION }}' \
+          -e SWAGGER_VERSION='${{ vars.SWAGGER_VERSION }}' \
+          -e HOST='${{ vars.HOST }}' \
+          -e PORT='${{ vars.PORT }}' \
+          --network weway \
+          --name '${{ env.name }}'-new '${{ env.name }}':'${{ env.tag }}' && \
+          sudo docker rm '${{ env.name }}' && sudo docker rmi $(sudo docker images -q); \
+          sudo docker rename '${{ env.name }}'-new '${{ env.name }}' && \
+          rm '${{ env.name }}'.tar'

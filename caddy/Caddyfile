@@ -1,0 +1,8 @@
+#{
+#    debug
+#}
+
+dragon-dev-back.blaize.technology {
+    reverse_proxy backend-dev:3000
+    reverse_proxy /logs* dozzle:8080
+}

@@ -1,6 +1,6 @@
 services:
   vault:
-    image: hashicorp/vault:1.16
+    image: hashicorp/vault:1.17.3
     container_name: vault-server
     environment:
       - VAULT_API_ADDR=http://0.0.0.0:8200
@@ -10,9 +10,6 @@ services:
       - IPC_LOCK
     volumes:
       - ./json:/vault/config
-      - hashicorp-vault:/vault/data
+      - ./hashicorp-vault:/vault/data
     entrypoint: vault server -config=/vault/config/local.json
     restart: unless-stopped
-
-volumes:
-  hashicorp-vault:

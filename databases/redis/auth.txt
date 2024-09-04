@@ -1,0 +1,7 @@
+REDISHOST=project.94qj4c.ng.0001.euc1.cache.amazonaws.com
+REDISPASSWORD=example
+REDISPORT=6379
+REDISUSER=default
+REDIS_BULL_DB=8
+REDIS_CACHE_DB=7
+

@@ -1,0 +1,19 @@
+      - name: Execute on server
+        run: |
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} \
+          'cd /var/www/decimated-website && \
+          git pull origin main && \
+          export NVM_DIR=~/.nvm && \
+          source ~/.nvm/nvm.sh && \
+          sudo chown -R $USER:www-data storage bootstrap/cache && \
+          sudo chmod -R 775 storage bootstrap/cache && \
+          composer install --no-dev --optimize-autoloader && \
+          rm -rf node_modules \      
+          npm ci && \
+          npm run production && \
+          php artisan migrate --force && \
+          php artisan cache:clear && \
+          php artisan config:cache && \
+          php artisan view:cache && \
+          php artisan route:cache && \
+          php artisan optimize'

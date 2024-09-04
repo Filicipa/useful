@@ -1,0 +1,50 @@
+tee /etc/docker/daemon.json > /dev/null <<EOT
+{
+  "metrics-addr": "0.0.0.0:9323",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+     },
+  "default-address-pools": [
+    {
+      "base": "172.17.0.0/16",
+      "size": 24
+   
+        }
+ 
+    ]
+}
+EOT
+
+tee /etc/docker/daemon.json > /dev/null <<EOT
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "1G",
+    "max-file": "3"
+  }
+}
+EOT
+systemctl reload docker.service
+
+dockerd --validate --config-file  /etc/docker/daemon.json
+
+############################################
+
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "5m"
+    max-file: "2"
+
+services:
+  backend:
+    restart: always
+    image: nfty-to-mag-backend:latest
+    container_name: backend
+    env_file: .env
+    networks:
+      - magnify
+    logging: *logging
+

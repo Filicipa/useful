@@ -1,0 +1,22 @@
+name: Main Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+    paths-ignore:
+      - ".github/workflows/**"
+
+jobs:
+  first-service:
+    uses: <organization>/<repository>/.github/workflows/deploy_ecr.yaml@<branch>
+    with:
+      service-name: "name1"
+    secrets: inherit
+
+  second-service:
+    uses: <organization>/<repository>/.github/workflows/deploy_ecr.yaml@<branch>
+    with:
+      service-name: "name2"
+    secrets: inherit

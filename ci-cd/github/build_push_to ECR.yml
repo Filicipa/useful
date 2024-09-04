@@ -1,0 +1,46 @@
+### For push in ECR public need specify "us-east-1" region
+name: ECR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/workflows/**"
+
+jobs:
+  Build_Push_ECR:
+    runs-on: ubuntu-22.04
+    env:
+      name: "token-sale"
+      tag: ${GITHUB_SHA}
+      ECR_REGISTRY: ${{ secrets.PROD_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.PROD_AWS_REGION }}".amazonaws.com"
+      AWS_REGION: ${{ vars.PROD_AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }} ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest

@@ -16,6 +16,7 @@
     ]
 }
 
+###################
 
 {
     "Version": "2012-10-17",
@@ -29,7 +30,9 @@
                 "ecr:BatchCheckLayerAvailability",
                 "ecr:PutImage"
             ],
-            "Resource": "arn:aws:ecr:::ecr_name/*"
+            "Resource": [
+                "arn:aws:ecr:<aws_region>:<account_id>:repository/<repo_name>"
+            ]
         },
         {
             "Effect": "Allow",

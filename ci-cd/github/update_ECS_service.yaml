@@ -1,0 +1,6 @@
+- name: Update ECS service
+  run: |
+    aws ecs update-service \
+    --cluster <claster_name> \
+    --service <service_name> \
+    --force-new-deployment

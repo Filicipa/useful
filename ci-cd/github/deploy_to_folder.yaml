@@ -1,0 +1,58 @@
+name: DEV deploy
+
+on:
+  push:
+    branches:
+      - dev
+    paths-ignore:
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+jobs:
+  Build_Deploy_files:
+    runs-on: ubuntu-22.04
+    env:
+      host: ${{ vars.DEV_HOST_NAME }}@${{ vars.DEV_HOST_IP }}
+      ssh_key: "${{ secrets.DEV_SSH_KEY }}"
+
+    steps:
+      - name: Add SSH key
+        run: |
+          echo "${{ env.ssh_key }}" > ssh_key.pem
+          sudo chmod 400 ssh_key.pem
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          path: "static/"
+
+      - name: Show path and files
+        run: |
+          pwd
+          ls -l
+          echo "==============================="
+          ls -l static/
+
+      - name: Install dependencies
+        run: |
+          cd static/
+          npm i -g pnpm
+          pnpm install --frozen-lockfile
+
+      - name: Build
+        run: |
+          cd static/
+          npm run build
+
+      - name: Copy files on DEV server
+        run: |
+          scp -i ssh_key.pem -o StrictHostKeyChecking=no \
+          -r static/dist/* \
+          ${{ env.host }}:/home/ubuntu/frontend_tmp/
+
+      - name: Copy files into Nginx
+        run: |
+          ssh -i ssh_key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          sudo cp -R ~/frontend_tmp/* /var/www/frontend/public/ ; \
+          sudo chmod -R www-data:www-data /var/www/frontend ; \
+          sudo rm -R ~/frontend_tmp/* '

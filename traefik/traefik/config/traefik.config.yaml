@@ -1,0 +1,7 @@
+http:
+  middlewares:
+    forward-auth:
+      forwardauth:
+        address: http://traefik-forward-auth:4181
+        trustForwardHeader: true
+        authResponseHeaders: X-Forwarded-User
