@@ -47,4 +47,16 @@ services:
     networks:
       - magnify
     logging: *logging
+    
+#################
 
+services:
+  nginx:
+    image: 'nginx:latest'
+    ports:
+      - '80:80'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G"
+        max-file: "3"
