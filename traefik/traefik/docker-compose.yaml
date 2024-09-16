@@ -22,7 +22,7 @@ services:
       - leaderboard-calculation
     environment:
       CF_API_EMAIL: alexander.f@blaize.tech
-      CF_API_KEY: e89e9504187d711213206766b15cd91f4180b
+      CF_API_KEY: <API_KEY>
     labels:
       traefik.enable: true
       traefik.http.routers.traefik.rule: Host(`dashboard.${BLAIZE_DOMAIN}`)
