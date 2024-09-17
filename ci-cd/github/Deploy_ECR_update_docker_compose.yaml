@@ -4,29 +4,43 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
-    paths:
-      - "example/"
+      - dev
     paths-ignore:
-      - ".github/workflows/**"
+      - .github/workflows/**
       
 jobs:
-  build_and_push_ECR:
+  Lint:
+    id: lint
     runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.10.0
+
+      - name: Install packages
+        run: npm ci    
+
+      - name: Lint
+        run: npm run lint
+
+  Build:
+    id: build
+    runs-on: ubuntu-22.04
+    needs: lint
     env:
-      name: "image-name"
+      name: ${GITHUB_REPOSITORY#*/}
       tag: ${GITHUB_SHA}
       ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.DEV_AWS_REGION }}".amazonaws.com"
       AWS_REGION: ${{ vars.DEV_AWS_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
-      path: example/
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: ${{ env.path }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -49,9 +63,9 @@ jobs:
           docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
           docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
 
-  Update_Ec2_image:
+  Deploy:
     if: ${{ success() }}
-    needs: "build_and_push_ECR"
+    needs: build
     runs-on: ubuntu-22.04
     env:
       ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.DEV_AWS_REGION }}".amazonaws.com"
