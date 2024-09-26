@@ -46,6 +46,12 @@ jobs:
 
       - name: Copy files on DEV server
         run: |
+          rsync -arvz --delete -e "ssh -i ssh_key.pem -o StrictHostKeyChecking=no" ./build/ ${{ env.host }}:/var/www/internal-explorer-stage/
+
+#####################
+
+      - name: Copy files on DEV server
+        run: |
           scp -i ssh_key.pem -o StrictHostKeyChecking=no \
           -r static/dist/* \
           ${{ env.host }}:/home/ubuntu/frontend_tmp/

@@ -1,0 +1,54 @@
+name: Docker Artifact
+
+on:
+  workflow_dispatch:
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      name: ${GITHUB_REPOSITORY##*/}
+      key: "${{ secrets.SSH }}"
+      stamp: ${GITHUB_SHA::7}
+      host: ${{ secrets.NAME_IP }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          echo "name=${{ env.name }}" >> $GITHUB_ENV
+          echo "stamp=${{ env.stamp }}" >> $GITHUB_ENV
+
+      - name: Build docker image
+        run: docker build . -t ${{ env.name }}:${{ env.stamp }}
+
+      - name: Save docker image
+        run: docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.stamp }}
+        
+      - name: Display structure of downloaded files
+        run: |
+          echo "pwd"
+          pwd
+          echo "ls -la"
+          ls -la
+          echo "================"
+          echo $GITHUB_ENV
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docker-artifact
+          path: ${{ env.name }}.tar
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-artifact
+          
+      - name: Display structure of downloaded files
+        run: ls -R
