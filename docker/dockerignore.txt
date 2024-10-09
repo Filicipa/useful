@@ -1,6 +1,8 @@
 .git
 .github
+.gitignore
 .results
-*Dockerfile*
+Dockerfile
 .dockerignore
 node_modules
+dist

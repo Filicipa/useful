@@ -1,4 +1,4 @@
-FROM node:20.13.0-alpine3.19 AS builder
+FROM node:20.18.0-alpine AS builder
 WORKDIR /app
 COPY ./package*.json ./
 RUN npm ci
@@ -6,7 +6,7 @@ COPY ./ ./
 RUN npm run build
 RUN npm ci --omit=dev
 
-FROM node:20.13.0-alpine3.19 AS runner
+FROM node:20.18.0-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/build ./build

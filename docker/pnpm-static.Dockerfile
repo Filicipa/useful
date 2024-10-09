@@ -1,4 +1,4 @@
-FROM node:20.12.2-alpine3.19 AS base
+FROM node:20.18.0-alpine AS base
 RUN npm i -g pnpm
 
 FROM base AS dependencies

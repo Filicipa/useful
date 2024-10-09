@@ -1,4 +1,4 @@
-FROM node:20.13.0-alpine3.19 AS builder
+FROM node:20.18.0-alpine AS builder
 WORKDIR /app
 ARG MODE
 COPY ./package*.json ./

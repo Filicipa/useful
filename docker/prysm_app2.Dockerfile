@@ -1,4 +1,4 @@
-FROM node:20.3.1-alpine3.18 AS build
+FROM node:20.18.0-alpine AS build
 WORKDIR /usr
 COPY package*.json ./
 RUN npm ci
@@ -7,7 +7,7 @@ RUN npx prisma generate
 RUN npm run build
 RUN npm ci --omit=dev
 
-FROM node:20.3.1-alpine3.18 AS production
+FROM node:20.18.0-alpine AS production
 WORKDIR /app
 COPY --chown=node:node --from=build /usr/prisma /app/prisma/
 COPY --chown=node:node --from=build /usr/node_modules ./node_modules

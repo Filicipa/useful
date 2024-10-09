@@ -1,16 +1,16 @@
-FROM node:16.20.2-alpine3.18 AS dependencies
+FROM node:20.18.0-alpine AS dependencies
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-FROM node:16.20.2-alpine3.18 AS builder
+FROM node:20.18.0-alpine AS builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY ./ ./
 RUN npm run db:generate
 RUN npm run build
 
-FROM node:16.20.2-alpine3.18 AS runner
+FROM node:20.18.0-alpine AS runner
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/dist/ ./dist
