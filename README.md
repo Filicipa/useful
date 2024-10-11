@@ -1,5 +1,6 @@
 # My templates and info
-
+- [Healthcheck for backend services](./healthcheck.md)
+- [Example README file](./example_README.md)
 - [AWS info](./aws/)
 - [Bash script for NODE](./bash%20node)
 - [Blockscout template for https](./blockscout/)

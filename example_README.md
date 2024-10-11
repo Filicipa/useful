@@ -1,11 +1,11 @@
-# solana-mvrv-z-score
-
+# Project name
+### Description
 ### API
 
 1. GET `https://{host}/api/health`
 ##### Query
 ```curl
-curl "https://rust-blockchain.blaize.technology/api/health"
+curl "https://project.example.com/api/health"
 ```
 
 ##### Response
@@ -25,7 +25,7 @@ curl "https://rust-blockchain.blaize.technology/api/health"
 3. GET `https://{host}/api/mvrv/z-score?time_start=<unix_timestamp>&time_end=<unix_timestamp>`
 ##### Query
 ```curl
-curl "https://rust-blockchain.blaize.technology/api/mvrv/z-score?time_start=1715299200&time_end=1715299800"
+curl "https://project.example.com/api/mvrv/z-score?time_start=1715299200&time_end=1715299800"
 ```
 
 ##### Response
@@ -65,13 +65,13 @@ cargo test
 ### Docker Ruild
 
 ```docker
-docker build -t solana-mvrv-z-score .
+docker build -t <image_name> .
 ```
 
 ### Docker Run
 
 ```
-docker run -d -p <HOST_PORT>:<CONTAINER_PORT> --env-file .env solana-mvrv-z-score
+docker run -d -p <HOST_PORT>:<CONTAINER_PORT> --env-file .env <image_name>
 ```
 
 ### Docker Stop
