@@ -4,8 +4,9 @@ services:
     container_name: loki
     ports:
       - "3100:3100"
-    command: -config.file=/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/loki-config.yaml
     volumes:
       - ./loki:/etc/loki
+      - ./loki_data:/tmp/loki
     networks:
       - grafana

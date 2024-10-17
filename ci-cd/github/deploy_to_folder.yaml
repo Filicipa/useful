@@ -16,15 +16,15 @@ jobs:
       ssh_key: "${{ secrets.DEV_SSH_KEY }}"
 
     steps:
-      - name: Add SSH key
-        run: |
-          echo "${{ env.ssh_key }}" > ssh_key.pem
-          sudo chmod 400 ssh_key.pem
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           path: "static/"
+
+      - name: Add SSH key
+        run: |
+          echo "${{ env.ssh_key }}" > ssh_key.pem
+          sudo chmod 400 ssh_key.pem
 
       - name: Show path and files
         run: |
