@@ -6,7 +6,7 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/loki-config.yaml
     volumes:
-      - ./loki:/etc/loki
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml
       - ./loki_data:/tmp/loki
     networks:
       - grafana

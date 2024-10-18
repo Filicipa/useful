@@ -2,6 +2,7 @@ server:
   http_listen_address: 0.0.0.0
   http_listen_port: 9080
 
+# Uncomment for standard logs
 # positions:
 #   filename: "/var/promtail/positions.yaml"
 
@@ -19,7 +20,21 @@ scrape_configs:
         regex: '\/?(.*)'
         # regex: '\/?(nginx|grafana)'
         target_label: container_name
-      - source_labels: ['__meta_docker_container_id']
-        target_label: 'container_id'
+      - source_labels: ["__meta_docker_container_id"]
+        target_label: "container_id"
     pipeline_stages:
       - docker: {}
+      # - json:
+      #     expressions:
+      #       level: log_level
+      #       msg: message
+
+  - job_name: "api"
+    syslog:
+      listen_address: 0.0.0.0:1514
+      labels:
+        job: "api"
+        service: "api"
+    relabel_configs:
+      - source_labels: ["__syslog_message_hostname"]
+        target_label: "hostname"

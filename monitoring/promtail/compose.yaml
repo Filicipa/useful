@@ -5,7 +5,7 @@ services:
     command: --config.file=/mnt/config/promtail-config.yaml
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./promtail-config.yaml:/mnt/config
+      - ./promtail-config.yaml:/mnt/config/promtail-config.yaml
       # - /var/lib/docker/containers/:/var/lib/docker/containers/
     ports:
       - 9080:9080
