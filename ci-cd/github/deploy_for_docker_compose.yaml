@@ -35,6 +35,10 @@ jobs:
           sudo chmod 400 ssh-key.pem
           scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
 
+      # - name: Copy image to EC2
+      #   run: |
+      #     rsync -arvz --delete -e "ssh rsync -arvz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar -o StrictHostKeyChecking=no" ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+
       - name: Start image
         run: |
           ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \

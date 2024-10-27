@@ -17,8 +17,8 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - example
+      - memelut
 
 networks:
-  example:
-    name: example
+  memelut:
+    name: memelut

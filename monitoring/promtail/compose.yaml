@@ -6,6 +6,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./promtail-config.yaml:/mnt/config/promtail-config.yaml
+      - ./data:/data/promtail
       # - /var/lib/docker/containers/:/var/lib/docker/containers/
     ports:
       - 9080:9080
