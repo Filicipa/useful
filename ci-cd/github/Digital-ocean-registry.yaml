@@ -1,0 +1,38 @@
+name: PROD
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+        - v*.*.*
+
+jobs:
+  Build_Push_Registry:
+    runs-on: ubuntu-22.04
+    env:
+      name: "duck-prod-backend"
+      tag: ${GITHUB_REF#refs/*/}
+      DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      REGISTRY: registry.digitalocean.com/${{ vars.PROD_REGISTRY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ env.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.REGISTRY}}/${{ env.name }}:${{ env.tag }}
+          docker tag ${{ env.REGISTRY}}/${{ env.name }}:${{ env.tag }} ${{ env.REGISTRY }}/${{ env.name }}:latest
+
+      - name: Log in to DigitalOcean Container Registry with short-lived credentials
+        run: doctl registry login --expiry-seconds 1200
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.name }}:${{ env.tag }}
+          docker push ${{ env.REGISTRY }}/${{ env.name }}:latest

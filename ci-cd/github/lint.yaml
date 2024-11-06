@@ -1,10 +1,21 @@
-name: DEV
+name: DEV-Lint
 
 on:
   workflow_dispatch:
+
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - develop
+    paths-ignore:
+      - ".github/workflows/**"
+
   push:
     branches:
-      - development
+      - develop
     paths-ignore:
       - ".github/workflows/**"
 
@@ -20,6 +31,15 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/
+          key: node-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            node-
+
       - name: Install Node Modules
         run: |
           npm ci
@@ -30,4 +50,4 @@ jobs:
 
       - name: Build
         run: |
-          npm run lint
+          npm run build

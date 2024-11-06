@@ -1,0 +1,20 @@
+services:
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./alertmanager/:/config
+    command:
+      - '--config.file=/config/alertmanager.yaml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=${ALERTMANAGER_EXTERNAL_URL:-http://localhost:9093/}'
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:${ALERTMANAGER_PORT:-9093}:9093"
+    networks:
+      - prometheus
+      - loki
+    labels:
+      group: "monitoring"
+      host.name: "${HOST_NAME}"

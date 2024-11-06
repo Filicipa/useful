@@ -1,0 +1,39 @@
+name: STAGE-IPFS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - stage
+    # paths-ignore:
+    #   - ".github/workflows/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate envs
+        run: |
+          echo "${{ secrets.STAGE_ENV }}" >> .env.local
+
+      - name: Build
+        run: yarn run build
+
+      - name: Deploy IPFS
+        uses: aquiladev/ipfs-action@v0.3.1
+        with:
+          path: ./out
+          service: pinata
+          pinataKey: ${{ secrets.PINATA_KEY }}
+          pinataSecret: ${{ secrets.PINATA_SECRET }}

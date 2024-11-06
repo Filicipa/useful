@@ -7,10 +7,13 @@ on:
       - dev
     paths-ignore:
       - .github/workflows/**
+
+env:
+    ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.DEV_AWS_REGION }}".amazonaws.com"
+    AWS_REGION: ${{ vars.DEV_AWS_REGION }}
       
 jobs:
   Lint:
-    id: lint
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
@@ -21,20 +24,17 @@ jobs:
           node-version: 20.10.0
 
       - name: Install packages
-        run: npm ci    
+        run: npm ci
 
       - name: Lint
         run: npm run lint
 
   Build:
-    id: build
     runs-on: ubuntu-22.04
-    needs: lint
+    needs: Lint
     env:
       name: ${GITHUB_REPOSITORY#*/}
       tag: ${GITHUB_SHA}
-      ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.DEV_AWS_REGION }}".amazonaws.com"
-      AWS_REGION: ${{ vars.DEV_AWS_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
 
@@ -65,11 +65,9 @@ jobs:
 
   Deploy:
     if: ${{ success() }}
-    needs: build
+    needs: Build
     runs-on: ubuntu-22.04
     env:
-      ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.DEV_AWS_REGION }}".amazonaws.com"
-      AWS_REGION: ${{ vars.DEV_AWS_REGION }}
       host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
       ssh-key: "${{ secrets.DEV_SSH_KEY }}"
 
@@ -84,6 +82,6 @@ jobs:
           ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS \
           --password-stdin ${{ env.ECR_REGISTRY }} ; \
-          docker compose -f services/compose.yaml pull && \
-          docker compose -f services/compose.yaml up -d && \
+          docker compose -f backend/compose.yaml pull && \
+          docker compose -f backend/compose.yaml up -d && \
           docker image prune -af'

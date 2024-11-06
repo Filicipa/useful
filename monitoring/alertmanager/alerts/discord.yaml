@@ -1,0 +1,12 @@
+groups:
+  - name: discord-alerts
+    rules:
+      - alert: InstanceDown
+        expr: probe_success == 0
+        #expr: vector(1)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Сервер {{ $labels.instance }} не отвечает"
+          description: "Сервер {{ $labels.instance }} не отвечает более 1 минуты"

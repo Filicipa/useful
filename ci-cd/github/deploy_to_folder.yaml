@@ -26,12 +26,9 @@ jobs:
           echo "${{ env.ssh_key }}" > ssh_key.pem
           sudo chmod 400 ssh_key.pem
 
-      - name: Show path and files
+      - name: Generate .env
         run: |
-          pwd
-          ls -l
-          echo "==============================="
-          ls -l static/
+          echo "SOME_ENV=${{ vars.SOME_ENV }}" >> .env
 
       - name: Install dependencies
         run: |
@@ -46,9 +43,9 @@ jobs:
 
       - name: Copy files on DEV server
         run: |
-          rsync -arvz --delete -e "ssh -i ssh_key.pem -o StrictHostKeyChecking=no" ./build/ ${{ env.host }}:/var/www/internal-explorer-stage/
+          rsync -arvz --delete -e "ssh -i ssh_key.pem -o StrictHostKeyChecking=no" static/build/ ${{ env.host }}:/var/www/welocome.memelut.com
 
-#####################
+      #####################
 
       - name: Copy files on DEV server
         run: |

@@ -2,6 +2,6 @@ users:
   # "admin" here is username
   admin:
     name: "admin"
-    # Just sha-256 which can be computed with "echo -n password | shasum -a 256"
-    password: "b337aefd567b45bbd1ba3f3be84645af66d6ce82933fccad2f809ad179340761"
+    # bcrypt password ""
+    password: ""
     email: me@email.net

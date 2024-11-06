@@ -1,0 +1,9 @@
+- targets:
+    - https://staging-backend.retrobridge.io/api/health-check
+  labels:
+    instance: "staging-backend-mainnet"
+
+- targets:
+    - https://backend.retrobridge.io/api/health-check
+  labels:
+    instance: "production-backend-mainnet"

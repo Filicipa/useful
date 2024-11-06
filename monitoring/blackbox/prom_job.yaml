@@ -1,0 +1,8 @@
+- job_name: "blackbox"
+  metrics_path: /probe
+  params:
+    module:
+      - http_2xx
+  file_sd_configs:
+    - files:
+        - blackbox_targets.yaml
