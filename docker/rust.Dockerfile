@@ -32,12 +32,17 @@ CMD ["/solana-mvrv-z-score"]
 
 FROM rust:alpine AS builder
 
-RUN apk add build-base pkgconfig openssl-dev openssl-libs-static ca-certificates
+RUN apk add --no-cache \
+    build-base \
+    pkgconfig \
+    openssl-dev \
+    openssl-libs-static \
+    ca-certificates \
+    rm -rf /var/cache/apk/*
+
 WORKDIR /app
 COPY ./ .
 RUN cargo build --release
-
-# --- CONTAINER ---
 
 FROM scratch AS runner
 

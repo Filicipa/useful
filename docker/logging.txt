@@ -1,37 +1,15 @@
-tee /etc/docker/daemon.json > /dev/null <<EOT
-{
-  "metrics-addr": "0.0.0.0:9323",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "10"
-     },
-  "default-address-pools": [
-    {
-      "base": "172.17.0.0/16",
-      "size": 24
-   
-        }
- 
-    ]
-}
-EOT
-
-tee /etc/docker/daemon.json > /dev/null <<EOT
-{
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "1G",
-    "max-file": "3"
-  }
-}
-EOT
-
-systemctl reload docker.service
-
-dockerd --validate --config-file  /etc/docker/daemon.json
-
-############################################
+services:
+  nginx:
+    image: 'nginx:latest'
+    ports:
+      - '80:80'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1G" #"100m"
+        max-file: "3"
+        
+##############
 
 x-logging: &logging
   driver: "json-file"
@@ -51,13 +29,33 @@ services:
     
 #################
 
-services:
-  nginx:
-    image: 'nginx:latest'
-    ports:
-      - '80:80'
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1G" #"100m"
-        max-file: "3"
+tee /etc/docker/daemon.json > /dev/null <<EOT
+{
+  "metrics-addr": "0.0.0.0:9323",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+     },
+  "default-address-pools": [
+    {
+      "base": "172.17.0.0/16",
+      "size": 24
+    }
+  ]
+}
+EOT
+
+tee /etc/docker/daemon.json > /dev/null <<EOT
+{
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "1G",
+    "max-file": "3"
+  }
+}
+EOT
+
+systemctl reload docker.service
+
+dockerd --validate --config-file  /etc/docker/daemon.json

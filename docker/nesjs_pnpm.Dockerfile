@@ -4,9 +4,9 @@ RUN npm install -g pnpm
 FROM base AS build
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --chown=node:node package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
-COPY --chown=node:node ./ ./
+COPY ./ ./
 RUN pnpm build
 
 

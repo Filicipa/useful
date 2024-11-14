@@ -8,6 +8,5 @@ function handler(event)  {
         headers['access-control-allow-origin'] = {value: "*"};
         console.log("Access-Control-Allow-Origin was missing, adding it now.");
     }
-
     return response;
 }
