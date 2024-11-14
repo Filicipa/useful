@@ -9,4 +9,4 @@ services:
       - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml
       - ./loki_data:/tmp/loki
     networks:
-      - grafana
+      - monitoring

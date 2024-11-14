@@ -1,0 +1,66 @@
+global:
+  scrape_interval: 20s
+  evaluation_interval: 20s
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager). (name of the host)
+  external_labels:
+    monitor: "Host server"
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
+rule_files:
+  - "alerts/test_rules.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape.
+scrape_configs:
+  - job_name: "external"
+    scrape_interval: 15s
+    basic_auth:
+      username: "prometheus"
+      password_file: "exporters/password"
+    scheme: https
+    tls_config:
+      ca_file: "exporters/ca.pem"
+    file_sd_configs:
+      - files:
+          - "exporters/*.json"
+
+  - job_name: "stage-backend-mainnet_cadvisor"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["10.114.0.3:9100"]
+        labels:
+          instance: "stage-backend-mainnet"
+
+  - job_name: "nats-prod"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["10.114.0.13:7777"]
+        labels:
+          instance: "nats-prod"
+
+  - job_name: "blackbox_exporter"
+    static_configs:
+      - targets: ["blackbox:9115"]
+
+  - job_name: "blackbox"
+    metrics_path: /probe
+    params:
+      module:
+        - http_2xx
+    file_sd_configs:
+      - files:
+          - blackbox_targets.yml
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - target_label: __address__
+        replacement: blackbox:9115
+
+alerting:
+  alertmanagers:
+    - scheme: http
+      static_configs:
+        - targets:
+            - "alertmanager:9093"

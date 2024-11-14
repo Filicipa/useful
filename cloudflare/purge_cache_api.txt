@@ -1,0 +1,4 @@
+curl --location 'https://api.cloudflare.com/client/v4/zones/<ZONE_ID>/purge_cache' \
+--header 'Authorization: Bearer <API_TOKEN>' \
+--header 'Content-Type: application/json' \
+--data '{  "purge_everything": true }'

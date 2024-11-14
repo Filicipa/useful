@@ -16,13 +16,14 @@ common:
       store: inmemory
 
 limits_config:
-  retention_period: 168h
+  retention_period: 30d
 
 compactor:
   working_directory: /tmp/loki/compaction
   compaction_interval: 24h
   retention_enabled: true
   retention_delete_delay: 2h
+  delete_request_store: filesystem
 
 chunk_store_config:
 
@@ -35,9 +36,9 @@ query_range:
 
 schema_config:
   configs:
-    - from: 2020-10-24
-      store: tsdb
+    - from: 2024-04-01
       object_store: filesystem
+      store: tsdb
       schema: v13
       index:
         prefix: index_

@@ -1,0 +1,25 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus/'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.external-url=${PROMETHEUS_URL:-http://localhost:9090}'
+      - '--web.enable-admin-api'
+    restart: unless-stopped
+    expose:
+      - 9090
+    ports:
+      - "0.0.0.0:${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - monitoring
+    labels:
+      group: "monitoring"
+      host.name: "${HOST_NAME}"

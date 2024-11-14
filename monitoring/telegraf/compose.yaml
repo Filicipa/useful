@@ -1,0 +1,21 @@
+services:
+  telegraf:
+   image: telegraf:latest
+   container_name: telegraf
+   user: "0"
+   privileged: true
+   command: "-debug"
+   environment:
+     - MQTT_USERNAME=dec-dev
+     - MQTT_PASSWORD=dec-dev-pass123
+     - HOST_PROC=/hostfs/proc
+     - HOST_MOUNT_PREFIX=/hostfs
+     - HOST_SYS=/hostfs/sys
+   volumes:
+     - ./telegraf.conf:/etc/telegraf/telegraf.conf:ro
+     - /:/hostfs:ro
+     - /run/udev:/run/udev:ro
+     - /var/run/utmp:/var/run/utmp:ro
+     - /var/log/nginx/access.log:/var/log/nginx/access.log:ro
+   network_mode: host
+

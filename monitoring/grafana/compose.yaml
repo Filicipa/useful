@@ -8,5 +8,8 @@ services:
       - '3000:3000'
     volumes:
       - './grafana_storage:/var/lib/grafana'
+    environment:
+     - GF_SERVER_ROOT_URL=http://my.grafana.server
+     - GF_INSTALL_PLUGINS=grafana-clock-panel
     networks:
-      - grafana
+      - monitoring
