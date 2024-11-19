@@ -8,7 +8,7 @@
 - [CI/CD templates github/gitlab](./ci-cd/)
 - [Databases info](./databases/)
 - [Dockerfile templates](./docker/)
-- [Dozzle(Real-time logging and monitoring for Docker in the browser) templates](./dozzle/)
+- [Dozzle (Real-time logging and monitoring for Docker in the browser) templates](./dozzle/)
 - [Foundry(depricated)](./foundry/)
 - [NGINX info](./nginx/)
 - [Strapi info](./strapi/)
