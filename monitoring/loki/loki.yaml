@@ -1,0 +1,99 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  # Only log messages with the given severity or above. Valid levels: [debug,info, warn, error]
+  log_level: info
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki/
+  storage:
+    filesystem:
+      chunks_directory: chunks
+      rules_directory: rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+ingester:
+  wal:
+    dir: wal
+  lifecycler:
+    address: 127.0.0.1
+  chunk_idle_period: 1h # Any chunk not receiving new logs in this time will be flushed
+  chunk_target_size: 1572864 # Loki will attempt to build chunks up to 1.5MB, flushing first if chunk_idle_period or max_chunk_age is reached first
+
+schema_config:
+  configs:
+    - from: 2024-11-19
+      object_store: filesystem
+      store: tsdb
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  filesystem:
+    directory: chunks
+  tsdb_shipper:
+    active_index_directory: tsdb-index
+    cache_location: tsdb-cache
+    cache_ttl: 48h
+
+compactor:
+  working_directory: compaction
+  retention_enabled: true
+  retention_delete_delay: 2h
+  delete_request_store: filesystem
+
+limits_config:
+  retention_period: 720h
+
+chunk_store_config:
+  chunk_cache_config:
+    embedded_cache:
+      enabled: true
+      max_size_mb: 500
+      ttl: 1h
+
+# Tables older than this retention period are deleted. Must be either 0
+# (disabled) or a multiple of 24h. When enabled, be aware this setting is
+# destructive to data!
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 720h
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+query_scheduler:
+  max_outstanding_requests_per_tenant: 2048
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: rules
+  rule_path: alerts
+  alertmanager_url: http://alertmanager:9093
+  # enable_api: true
+
+# By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
+# analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
+#
+# Statistics help us better understand how Loki is used, and they show us performance
+# levels for most users. This helps us prioritize features and documentation.
+# For more information on what's sent, look at
+# https://github.com/grafana/loki/blob/main/pkg/analytics/stats.go
+# Refer to the buildReport method to see what goes into a report.
+#
+# If you would like to disable reporting, uncomment the following lines:
+analytics:
+  reporting_enabled: false
