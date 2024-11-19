@@ -13,6 +13,6 @@
 - [NGINX info](./nginx/)
 - [Strapi info](./strapi/)
 - [Swagger](./swagger/)
-- [Traefik(proxy server) examples](./traefik/)
+- [Traefik (proxy server) examples](./traefik/)
 - [HCP Vault templates](./vault/)
 - and other)  
