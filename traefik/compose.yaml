@@ -1,0 +1,53 @@
+services:
+  backend:
+    image: leaderboard-calculation:latest
+    restart: always
+    container_name: backend
+    env_file:
+      - .env.backend
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - leaderboard-calculation
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`backend.starkdefi.blaize.technology`)
+      - traefik.http.routers.backend.entrypoints=secureweb
+      - traefik.http.routers.backend.tls=true
+      - traefik.http.routers.backend.tls.certresolver=myresolver
+
+  redis:
+    container_name: redis
+    image: redis:7.2.3
+    restart: always
+    #    ports:
+    #      - 6379:6379
+    volumes:
+      - ./redis:/data
+    networks:
+      - leaderboard-calculation
+
+  postgres:
+    container_name: postgres
+    image: postgres:16.1-alpine
+    restart: always
+    env_file:
+      - .env.postgres
+    #    ports:
+    #      - 5432:5432
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+    networks:
+      - leaderboard-calculation
+#    labels:
+#      - traefik.enable=true
+#      - traefik.tcp.routers.postgres.rule=HostSNI(`*`)
+#      - traefik.tcp.routers.postgres.entrypoints=postgres
+#      - traefik.tcp.routers.postgres.service=postgres
+#      - traefik.tcp.services.postgres.loadbalancer.server.port=5432
+
+networks:
+  leaderboard-calculation:
+    name: leaderboard-calculation
+    external: true

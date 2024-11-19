@@ -1,3 +1,0 @@
-if ($http_origin ~* "^https?://frontend-dev-loop/.blaize/.technology$") {
-    add_header Access-Control-Allow-Origin $http_origin;
-}

@@ -1,7 +1,0 @@
-    location /logs {
-        proxy_pass      http://localhost:8080;
-
-        chunked_transfer_encoding off;
-        proxy_buffering off;
-        proxy_cache off;
-    }

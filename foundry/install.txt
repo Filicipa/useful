@@ -1,1 +1,0 @@
-cargo install --git https://github.com/foundry-rs/foundry anvil --locked --force

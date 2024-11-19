@@ -1,0 +1,118 @@
+networks:
+  hunting-panel:
+    name: hunting-panel
+
+services:
+  frontend:
+    image: hunting-panel-front:latest
+    container_name: hunting-panel-front
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    networks:
+      - hunting-panel
+    # ports:
+    #   - 80:80
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.frontend.entrypoints=secureweb
+      - traefik.http.services.frontend.loadbalancer.server.port=80
+      - traefik.http.routers.frontend.tls=true
+      - traefik.http.routers.frontend.tls.certresolver=le-resolver
+
+  backend:
+    depends_on:
+      - mongo
+    image: hunting-panel-back:latest
+    # image: nginx:alpine
+    container_name: hunting-panel-back
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
+    networks:
+      - hunting-panel
+    # ports:
+    #   - 8080:8080
+    #   - 4000:4000
+    #   - 3333:3333
+    environment:
+      MAIN_PORT: 8080
+      SOCKET_MAIN_PORT: 4000
+      SOCKET_FAKE_PORT: 3333
+      JWT_SALT: 10
+      DB_URL: mongodb://root:example@mongo:27017/admin
+      JWT_SECRET: 68
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.entrypoints=secureweb
+      - traefik.http.routers.backend.service=backend
+      - traefik.http.routers.backend.rule=Host(`api.${DOMAIN}`)
+      - traefik.http.services.backend.loadbalancer.server.port=8080
+      # CORS rules
+      - traefik.http.routers.backend.middlewares=cors
+      - traefik.http.middlewares.cors.headers.accessControlAllowMethods=*
+      - traefik.http.middlewares.cors.headers.accessControlAllowOriginListRegex=https?:\/\/${DOMAIN}
+      - traefik.http.middlewares.cors.headers.accessControlAllowHeaders=*
+      - traefik.http.middlewares.cors.headers.accessControlExposeHeaders=*
+      - traefik.http.middlewares.cors.headers.accessControlAllowCredentials=true
+      - traefik.http.middlewares.cors.headers.accessControlMaxAge=3600
+      - traefik.http.middlewares.cors.headers.addvaryheader=true
+      # Web socket requests
+      - traefik.http.routers.backend-socket.rule=Host(`api.${DOMAIN}`) && PathPrefix(`/panel/`)
+      - traefik.http.middlewares.add-panel-prefix.addprefix.prefix=/socket.io/
+      - traefik.http.routers.backend-socket.middlewares=add-panel-prefix
+      - traefik.http.routers.backend-socket.service=backend-socket
+      - traefik.http.routers.backend-socket.entrypoints=secureweb
+      - traefik.http.services.backend-socket.loadbalancer.server.port=4000
+      # FAKE web socket requests
+      - traefik.http.routers.backend-fake.rule=Host(`api.${DOMAIN}`) && PathPrefix(`/fake/`)
+      - traefik.http.middlewares.add-fake-prefix.addprefix.prefix=/socket.io/
+      - traefik.http.routers.backend-fake.middlewares=add-fake-prefix
+      - traefik.http.routers.backend-fake.service=backend-fake
+      - traefik.http.routers.backend-fake.entrypoints=secureweb
+      - traefik.http.services.backend-fake.loadbalancer.server.port=3333
+      # SSL config
+      - traefik.http.routers.backend.tls=true
+      - traefik.http.routers.backend.tls.certresolver=le-resolver
+
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - ./mongo:/data/db
+    networks:
+      - hunting-panel
+  #    ports:
+  #      - 27017:27017
+
+  traefik:
+    depends_on:
+      - frontend
+      - backend
+    image: traefik:v2.11
+    container_name: traefik
+    networks:
+      - hunting-panel
+    ports:
+      # The HTTP port
+      - "80:80"
+      # The HTTPS port
+      - "443:443"
+    #      # The Web UI (enabled by --api.insecure=true)
+    #      - "8080:8080"
+    command: --configFile /config/traefik.yaml
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/:/data/
+      - ./traefik-config/:/config/
+    labels:
+      traefik.enable: true
+      traefik.http.routers.traefik.rule: Host(`dashboard.${DOMAIN}`)
+      traefik.http.routers.traefik.entrypoints: secureweb
+      traefik.http.routers.traefik.service: api@internal
+      traefik.http.routers.traefik.tls: true
+      traefik.http.routers.traefik.tls.certresolver: le-resolver
