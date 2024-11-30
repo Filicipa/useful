@@ -11,10 +11,9 @@ services:
       - '--web.external-url=${ALERTMANAGER_EXTERNAL_URL:-http://localhost:9093/}'
     restart: unless-stopped
     ports:
-      - "0.0.0.0:${ALERTMANAGER_PORT:-9093}:9093"
+      - "0.0.0.0:9093"
     networks:
-      - prometheus
-      - loki
+      - monitoring
     labels:
       group: "monitoring"
       host.name: "${HOST_NAME}"

@@ -1,23 +1,24 @@
-cadvisor:
-  image: gcr.io/cadvisor/cadvisor:latest
-  container_name: cadvisor
-  volumes:
-    - /:/rootfs:ro
-    - /var/run/docker.sock:/var/run/docker.sock:ro
-    - /var/run:/var/run:rw
-    - /sys:/sys:ro
-    - /var/lib/docker:/var/lib/docker:ro
-    - /sys/fs/cgroup:/cgroup:ro
-    - /dev/disk/:/dev/disk:ro
-  command:
-    - "-housekeeping_interval=10s"
-    - "-docker_only=true"
-  restart: unless-stopped
-  devices:
-    - /dev/kmsg:/dev/kmsg
-  security_opt:
-    - no-new-privileges:true
-  ports:
-    - "8080:8080"
-  networks:
-    - monitoring
+services:
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /sys/fs/cgroup:/cgroup:ro
+      - /dev/disk/:/dev/disk:ro
+    command:
+      - "-housekeeping_interval=10s"
+      - "-docker_only=true"
+    restart: unless-stopped
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring

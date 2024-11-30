@@ -7,6 +7,6 @@ services:
     command: -config.file=/etc/loki/loki.yaml
     volumes:
       - ./loki/loki.yaml:/etc/loki/loki.yaml
-      - ./loki_data:/tmp/loki
+      - ./loki_data:/loki
     networks:
       - monitoring

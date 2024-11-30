@@ -25,9 +25,9 @@ scrape_configs:
         # regex: '\/?(nginx|grafana)'
         target_label: container_name
       - source_labels: ["__meta_docker_container_id"]
-        target_label: "container_id"
-      - target_label: label_name
-        replacement: example
+        target_label: container_id
+      - target_label: <label_name>
+        replacement: <example>
 
     pipeline_stages:
       - docker: {}

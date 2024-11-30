@@ -2,7 +2,7 @@ auth_enabled: false
 
 server:
   http_listen_port: 3100
-  # Only log messages with the given severity or above. Valid levels: [debug,info, warn, error]
+  # Valid levels: [debug,info, warn, error]
   log_level: info
 
 common:
@@ -10,8 +10,8 @@ common:
   path_prefix: /loki/
   storage:
     filesystem:
-      chunks_directory: chunks
-      rules_directory: rules
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
   replication_factor: 1
   ring:
     kvstore:
@@ -19,7 +19,7 @@ common:
 
 ingester:
   wal:
-    dir: wal
+    dir: /loki/wal
   lifecycler:
     address: 127.0.0.1
   chunk_idle_period: 1h # Any chunk not receiving new logs in this time will be flushed
@@ -37,14 +37,14 @@ schema_config:
 
 storage_config:
   filesystem:
-    directory: chunks
+    directory: /loki/chunks
   tsdb_shipper:
-    active_index_directory: tsdb-index
-    cache_location: tsdb-cache
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
     cache_ttl: 48h
 
 compactor:
-  working_directory: compaction
+  working_directory: /loki/compaction
   retention_enabled: true
   retention_delete_delay: 2h
   delete_request_store: filesystem
@@ -80,8 +80,8 @@ ruler:
   storage:
     type: local
     local:
-      directory: rules
-  rule_path: alerts
+      directory: /loki/rules
+  rule_path: /loki/alerts
   alertmanager_url: http://alertmanager:9093
   # enable_api: true
 
