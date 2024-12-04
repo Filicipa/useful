@@ -1,6 +1,7 @@
 services:
   mongo:
     image: mongo:8.0.0-rc7
+    container_name: mongo
     restart: always
     ports:
       - 27017:27017
@@ -15,3 +16,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
+    networks:
+      - <name>
+        
+networks:
+  <network_name>:
+    name: <name>
