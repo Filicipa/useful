@@ -1,0 +1,65 @@
+services:
+  opensearch-node:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-node
+    restart: on-failure
+    ports:
+      - 9200:9200
+      - 9600:9600
+    environment:
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Opensearch123!"
+      - "discovery.type=single-node"
+#      - "plugins.security.disabled=true"
+      - cluster.name=opensearch-test
+      - node.name=opensearch-node
+      - bootstrap.memory_lock=true # Disable JVM heap memory swapping
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Set min and max JVM heap sizes to at least 50% of system RAM
+      - "DISABLE_INSTALL_DEMO_CONFIG=false" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
+#      - "DISABLE_SECURITY_PLUGIN=true" # Disables Security plugin
+      - plugins.security.ssl.http.enabled=false
+      - plugins.security.restapi.roles_enabled=["all_access"]
+    networks:
+      - monitoring
+    volumes:
+      - ./opensearch-data:/usr/share/opensearch/data
+#      - ./opensearch.yml:/usr/share/opensearch/config/opensearch.yml
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    depends_on:
+      - opensearch-node
+    ports:
+      - 5601:5601
+    expose:
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch-node:9200"]'
+#      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+      - "DISABLE_INSTALL_DEMO_CONFIG=false"
+#      - "plugins.security.disabled=true"
+      - "opensearch.ssl.verificationMode=none"
+      - "server.ssl.enabled=false"
+      - "OPENSEARCH_USERNAME=admin"
+      - "OPENSEARCH_PASSWORD=Opensearch123!"
+    networks:
+      - monitoring
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # - ./site:/srv
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    name: monitoring
