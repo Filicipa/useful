@@ -64,7 +64,6 @@ jobs:
           docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
 
   Deploy:
-    if: ${{ success() }}
     needs: Build
     runs-on: ubuntu-22.04
     env:
@@ -72,7 +71,7 @@ jobs:
       ssh-key: "${{ secrets.DEV_SSH_KEY }}"
 
     steps:
-      - name: Create SSH key
+      - name: Generate SSH key
         run: |
           echo "${{ env.ssh-key }}" > ssh-key.pem
           sudo chmod 400 ssh-key.pem

@@ -12,7 +12,7 @@ jobs:
     env:
       name: ${GITHUB_REPOSITORY#*/}"-dev"
       key: "ssh-key-scrap"
-      stamp: ${GITHUB_SHA}
+      tag: ${GITHUB_SHA}
       host: ${{ secrets.DEV_AWS_HOST }}
     steps:
       - name: Checkout code
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build docker
         run: |
-          sudo docker buildx build -t ${{ env.name }}:${{ env.stamp }} --platform linux/arm/v8 --output type=docker .
+          sudo docker buildx build -t ${{ env.name }}:${{ env.tag }} --platform linux/arm/v8 --output type=docker .
       #  --platform linux/amd64,linux/arm64,linux/arm/v8
       - name: Show images
         run: |
@@ -37,7 +37,7 @@ jobs:
 
       - name: Save image
         run: |
-          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.stamp }}
+          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
 
       - name: Save secret key
         run: |
@@ -54,6 +54,6 @@ jobs:
           sudo docker load -i '${{ env.name }}'.tar; \
           sudo docker stop '${{ env.name }}' || true; \
           sudo docker run --log-driver json-file --log-opt max-size=10m --log-opt max-file=1 -d --restart always \
-          -p '${{ vars.DEV_PORT }}':'${{ vars.DEV_PORT }}' --name '${{ env.name }}'-new '${{ env.name }}':'${{ env.stamp }}'; \
+          -p '${{ vars.DEV_PORT }}':'${{ vars.DEV_PORT }}' --name '${{ env.name }}'-new '${{ env.name }}':'${{ env.tag }}'; \
           sudo docker rm '${{ env.name }}' || true; sudo docker rmi $(sudo docker images -q) || true; \
-          sudo docker rename '${{ env.name }}'-new '${{ env.name }}'; rm '${{ env.name }}'-'${{ env.stamp }}'.tar'
+          sudo docker rename '${{ env.name }}'-new '${{ env.name }}'; rm '${{ env.name }}'-'${{ env.tag }}'.tar'

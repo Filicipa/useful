@@ -10,5 +10,8 @@ docker exec -t <your-db-container> pg_dumpall -c -U <postgres> | gzip > dump_`da
 ```
 ### Restore your databases
 ```bash
-cat your_dump.sql | docker exec -i <your-db-container> psql -U <postgres>
+cat <your_dump.sql> | docker exec -i <your-db-container> psql -U <postgres> <database>
 ```
+or
+```bash
+cat <your_dump.sql> | docker exec -i <your-db-container> pg_restore -U <USER> -d <database>

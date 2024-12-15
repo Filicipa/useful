@@ -23,8 +23,8 @@ jobs:
 
       - name: Add SSH key
         run: |
-          echo "${{ env.ssh_key }}" > ssh_key.pem
-          sudo chmod 400 ssh_key.pem
+          echo "${{ env.ssh_key }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
 
       - name: Generate .env
         run: |
@@ -43,19 +43,19 @@ jobs:
 
       - name: Copy files on DEV server
         run: |
-          rsync -arvz --delete -e "ssh -i ssh_key.pem -o StrictHostKeyChecking=no" static/build/ ${{ env.host }}:/var/www/welocome.memelut.com
+          rsync -arvz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" static/build/ ${{ env.host }}:/var/www/welocome.memelut.com
 
       #####################
 
       - name: Copy files on DEV server
         run: |
-          scp -i ssh_key.pem -o StrictHostKeyChecking=no \
+          scp -i ssh-key.pem -o StrictHostKeyChecking=no \
           -r static/dist/* \
           ${{ env.host }}:/home/ubuntu/frontend_tmp/
 
       - name: Copy files into Nginx
         run: |
-          ssh -i ssh_key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
           sudo cp -R ~/frontend_tmp/* /var/www/frontend/public/ ; \
           sudo chmod -R www-data:www-data /var/www/frontend ; \
           sudo rm -R ~/frontend_tmp/* '
