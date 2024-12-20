@@ -46,6 +46,7 @@ scrape_configs:
       - source_labels: ["__syslog_message_hostname"]
         target_label: "hostname"
 
+
   - job_name: system
     pipeline_stages:
     static_configs:
@@ -54,4 +55,4 @@ scrape_configs:
         labels:
           job: varlogs # A `job` label is fairly standard in prometheus and useful for linking metrics and logs.
           host: yourhost # A `host` label will help identify logs from this machine vs others
-          __path__: /var/log/*.log
+          __path__: /log/*.log

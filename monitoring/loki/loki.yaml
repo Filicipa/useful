@@ -76,13 +76,13 @@ query_range:
 query_scheduler:
   max_outstanding_requests_per_tenant: 2048
 
-ruler:
-  storage:
-    type: local
-    local:
-      directory: /loki/rules
-  rule_path: /loki/alerts
-  alertmanager_url: http://alertmanager:9093
+# ruler:
+#   storage:
+#     type: local
+#     local:
+#       directory: /loki/rules
+#   rule_path: /loki/alerts
+#   alertmanager_url: http://alertmanager:9093
   # enable_api: true
 
 # By default, Loki will send anonymous, but uniquely-identifiable usage and configuration

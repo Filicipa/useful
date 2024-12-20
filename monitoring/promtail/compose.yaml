@@ -7,7 +7,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./config:/config
       - ./data:/data/promtail
-      # - /var/lib/docker/containers/:/var/lib/docker/containers/
+      # - /var/log:/log
     ports:
       - 9080:9080
     networks:

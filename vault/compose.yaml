@@ -9,7 +9,7 @@ services:
     cap_add:
       - IPC_LOCK
     volumes:
-      - ./json:/vault/config
+      - ./config:/vault/config
       - ./hashicorp-vault:/vault/data
     entrypoint: vault server -config=/vault/config/local.json
-    restart: unless-stopped
+    restart: always

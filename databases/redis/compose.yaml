@@ -10,3 +10,32 @@ services:
       timeout: 5s
     networks:
       - memelut
+
+  redis-persistent:
+    image: redis:7.4.0-bookworm
+    container_name: redis-persistent
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 127.0.0.1:6379:6379
+    volumes:
+      - redis_data:/data
+    command:
+      - "redis-server"
+      - "--save"
+      - "60"
+      - "1"
+      - "--save"
+      - "300"
+      - "10"
+      - "--appendonly"
+      - "yes"
+      - "--appendfsync"
+      - "everysec"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - compound
