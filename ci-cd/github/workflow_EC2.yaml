@@ -7,15 +7,17 @@ on:
       - dev
     paths-ignore:
       - ".github/workflows/**"
+env:
+  name: ${GITHUB_REPOSITORY#*/}"-dev"
+  ssh-key: ${{ secrets.DEV_SSH_KEY }}
+  tag: ${GITHUB_SHA}
+  host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
 
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-22.04
     env:
-      name: ${GITHUB_REPOSITORY#*/}"-dev"
-      ssh-key: ${{ secrets.DEV_SSH_KEY }}
       tag: ${GITHUB_SHA}
-      host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
 
     steps:
       - name: Checkout code
@@ -37,6 +39,14 @@ jobs:
       - name: Copy image to EC2
         run: |
           scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+
+  Deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Generate SSH key
+        run: |
+          echo "${{ env.ssh-key }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
 
       - name: Start image
         run: |
