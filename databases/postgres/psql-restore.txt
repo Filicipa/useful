@@ -1,1 +1,0 @@
-psql -h host -p 5432 -U user -d db-name -f file-backup.sql
