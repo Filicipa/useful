@@ -1,0 +1,11 @@
+services:
+  ganache:
+    image: trufflesuite/ganache:latest
+    container_name: ganache
+    restart: always
+    command: --database.dbPath /state/stateMaxSub --wallet.defaultBalance 1000000 --miner.blockGasLimit 0x1fffffffffffff -d
+#    environment:
+    ports:
+      - 8545:8545
+    volumes:
+      - ./state:/state

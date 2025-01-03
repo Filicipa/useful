@@ -16,6 +16,7 @@ jobs:
       name: "token-sale"
       tag: ${GITHUB_SHA}
       ECR_REGISTRY: ${{ secrets.PROD_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.PROD_AWS_REGION }}".amazonaws.com"
+      AWS_ACCOUNT_ID: ${{ secrets.PROD_AWS_ACCOUNT_ID }}
       AWS_REGION: ${{ vars.PROD_AWS_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
@@ -24,12 +25,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Configure AWS Credentials OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-oidc
+          aws-region: eu-central-1
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
 
       - name: Build docker image
         run: |
