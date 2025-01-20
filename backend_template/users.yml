@@ -1,0 +1,7 @@
+users:
+  # "admin" here is username
+  admin:
+    name: "admin"
+    # bcrypt password ""
+    password: ""
+    email: me@email.net

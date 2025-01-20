@@ -1,0 +1,8 @@
+#{
+#    debug
+#}
+
+example.com {
+    reverse_proxy backend:3000
+    reverse_proxy /logs* dozzle:8080
+}

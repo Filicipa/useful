@@ -1,0 +1,75 @@
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "3"
+
+services:
+  backend:
+    image: ${IMAGE_NAME:TAG}
+    container_name: backend
+    restart: always
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    networks:
+      - backend
+    logging: *logging
+
+  postgres:
+    image: postgres:16.3
+    container_name: postgres
+    restart: always
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example123
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    networks:
+      - backend
+    logging: *logging
+
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # - ./site:/srv
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+    networks:
+      - backend
+    logging: *logging
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./users.yml:/data/users.yml:ro
+    ports:
+      - 8080:8080
+    environment:
+      DOZZLE_BASE: /logs
+      DOZZLE_AUTH_PROVIDER: simple
+    networks:
+      - backend
+    logging: *logging
+
+networks:
+  backend:
+    name: backend

@@ -9,8 +9,9 @@ services:
         max-size: "1G" #"100m"
         max-file: "3"
         
-##############
-
+###
+docker logs container > container.log 2>&1
+###
 x-logging: &logging
   driver: "json-file"
   options:
