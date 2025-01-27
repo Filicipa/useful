@@ -1,5 +1,5 @@
 ### PNPM ###
-FROM node:20.18.0-alpine AS base
+FROM node:22.13.1-alpine AS base
 RUN npm i -g pnpm
 
 FROM base AS builder
@@ -20,14 +20,14 @@ CMD ["node", "server.js"]
 
 ### NPM ###
 
-FROM node:20.18.0-alpine AS builder
+FROM node:22.13.1-alpine AS builder
 WORKDIR /app
 COPY package.json next.config.js ./
 RUN npm install --force
 COPY ./ ./
 RUN npm run build
 
-FROM node:20.18.0-alpine AS runner
+FROM node:22.13.1-alpine AS runner
 WORKDIR /app
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static

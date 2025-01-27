@@ -1,4 +1,4 @@
-FROM node:20.18.0-alpine AS base 
+FROM node:22.13.1-alpine AS base 
 RUN npm install -g pnpm
 
 FROM base AS build
@@ -10,7 +10,7 @@ COPY ./ ./
 RUN pnpm build
 
 
-FROM node:20.18.0-alpine AS production
+FROM node:22.13.1-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --chown=node:node --from=build /app/node_modules ./node_modules
