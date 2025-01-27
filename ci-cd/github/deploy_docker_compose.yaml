@@ -40,7 +40,7 @@ jobs:
           scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
 
   Deploy:
-    needs: build
+    needs: Build
     runs-on: ubuntu-22.04
     steps:
       - name: Generate SSH key
