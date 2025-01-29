@@ -5,10 +5,10 @@ FROM base AS build
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm i --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 COPY ./ ./
-RUN pnpm build
-
+RUN pnpm run build
+RUN pnpm install --frozen-lockfile --prod
 
 FROM node:22.13.1-alpine AS production
 WORKDIR /app
@@ -18,4 +18,4 @@ COPY --chown=node:node --from=build /app/dist ./dist
 
 USER node
 EXPOSE 5001
-CMD [ "node", "dist/main.js" ]
+CMD [ "node", "dist/main" ]
