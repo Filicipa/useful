@@ -3,6 +3,7 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     command: --config.file=/config/promtail.yaml
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./config:/config

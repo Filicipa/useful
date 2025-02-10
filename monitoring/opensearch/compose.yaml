@@ -27,6 +27,7 @@ services:
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:latest
     container_name: opensearch-dashboards
+    restart: unless-stopped
     depends_on:
       - opensearch-node
     ports:
