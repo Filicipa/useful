@@ -44,7 +44,7 @@ task4(){
   # setting up golang TASK 4
   echo -e "\n${ORANGE}TASK: ${GREEN}[Setting GO]${NC}\n"
   rm -rf /usr/local/go && tar -C /usr/local -xzf go1.18.3.linux-amd64.tar.gz
-  echo -e '\nPATH=$PATH:/usr/local/go/bin' >>/etc/profile
+  echo -e "\nPATH=$PATH:/usr/local/go/bin" >>/etc/profile
 
   if [[ $totalValidator -gt 0 ]]; then
       echo -e '\ncd /root/Core-Blockchain/' >>/etc/profile
@@ -171,7 +171,7 @@ createRpc(){
   task7
   i=$((totalValidator + 1))
   while [[ $i -le $totalNodes ]]; do
-    read -p "Enter Virtual Host(example: rpc.yourdomain.tld) without https/http: " vhost
+    read -r -p "Enter Virtual Host(example: rpc.yourdomain.tld) without https/http: " vhost
     echo -e "\nVHOST=$vhost" >> ./.env
     ./node_src/build/bin/geth --datadir ./chaindata/node$i init ./genesis.json
     ((i += 1))
@@ -207,11 +207,11 @@ finalize(){
 #########################################################################
 
 #+-----------------------------------------------------------------------------------------------+
-#|                                                                                                                             |
-#|                                                                                                                             |
-#|                                                      UTILITY                                                        |
-#|                                                                                                                             |
-#|                                                                                                                             |
+#|                                                                                               |
+#|                                                                                               |
+#|                                                      UTILITY                                  |
+#|                                                                                               |
+#|                                                                                               |
 #+-----------------------------------------------------------------------------------------------+
 
 
