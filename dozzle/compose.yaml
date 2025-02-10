@@ -11,5 +11,6 @@ services:
     environment:
       DOZZLE_BASE: /logs
       DOZZLE_AUTH_PROVIDER: simple
+      DOZZLE_HOSTNAME: mywebsite.xyz
     networks:
       - networkName
