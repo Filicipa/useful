@@ -1,6 +1,6 @@
 services:
   vault:
-    image: hashicorp/vault:1.18.1
+    image: hashicorp/vault:1.18.5
     container_name: vault-server
     environment:
       - VAULT_API_ADDR=http://0.0.0.0:8200

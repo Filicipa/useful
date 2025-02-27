@@ -10,6 +10,7 @@
 - [Monitoring templates](./monitoring/)
 - [Dockerfile templates](./docker/)
 - [Dozzle (Real-time logging and monitoring for Docker in the browser) templates](./dozzle/)
+- [Message brokers](./message-brokers/)
 - [Foundry(depricated)](./foundry/)
 - [NGINX info](./nginx/)
 - [Strapi info](./strapi/)
