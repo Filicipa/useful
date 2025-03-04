@@ -7,7 +7,7 @@ RUN npm ci
 COPY ./ ./
 RUN npm run build ${SERVICE_NAME}
 
-FROM node:22.13.1-alpine as production
+FROM node:22.13.1-alpine AS production
 ARG SERVICE_NAME='name'
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
