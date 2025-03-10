@@ -13,8 +13,7 @@ FROM base AS runner
 WORKDIR /app
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-COPY ./public ./public
-COPY ./.env ./
+COPY --from=builder /app/public ./public/.next/
 EXPOSE 3000
 CMD ["node", "server.js"]
 
@@ -30,10 +29,11 @@ RUN npm ci --omit=dev
 
 FROM node:22.13.1-alpine AS runner
 WORKDIR /app
+
+COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./
+COPY --from=builder /app/public ./public/.next/
+COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+CMD ["node", "server.js"]
