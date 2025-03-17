@@ -59,13 +59,6 @@ chunk_store_config:
       max_size_mb: 500
       ttl: 1h
 
-# Tables older than this retention period are deleted. Must be either 0
-# (disabled) or a multiple of 24h. When enabled, be aware this setting is
-# destructive to data!
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: 720h
-
 query_range:
   results_cache:
     cache:
@@ -83,7 +76,7 @@ query_scheduler:
 #       directory: /loki/rules
 #   rule_path: /loki/alerts
 #   alertmanager_url: http://alertmanager:9093
-  # enable_api: true
+#   enable_api: true
 
 # By default, Loki will send anonymous, but uniquely-identifiable usage and configuration
 # analytics to Grafana Labs. These statistics are sent to https://stats.grafana.org/
