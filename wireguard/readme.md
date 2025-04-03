@@ -1,0 +1,59 @@
+# WireGuard
+## Install
+```bash
+sudo apt update
+sudo apt install wireguard -y
+```
+### Generate server keys
+```bash
+cd /etc/wireguard
+umask 077
+wg genkey | tee privatekey | wg pubkey > publickey
+```
+### Create client config keys
+```bash
+wg genkey | tee client1_privatekey | wg pubkey > client1_publickey
+```
+### Create server config file `wg0.conf`
+```ini
+[Interface]
+# Internal IP-server WireGuard
+Address = 10.0.0.1/24
+# Server private key
+PrivateKey = ****
+ListenPort = 51820
+
+PostUp = sysctl -w net.ipv4.ip_forward=1; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+PostDown = sysctl -w net.ipv4.ip_forward=0; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
+
+# Client 1
+[Peer]
+PublicKey = ****
+AllowedIPs = 10.0.0.2/32
+
+# Client 2
+[Peer]
+PublicKey = ****
+AllowedIPs = 10.0.0.3/32
+```
+### Reload wireguard
+```bash
+wg-quick down wg0
+wg-quick up wg0
+wg show
+```
+
+### Create user config file
+```ini
+[Interface]
+# User private key
+PrivateKey = 
+Address = 10.0.0.5/24
+
+[Peer]
+# Server public key
+PublicKey = 
+AllowedIPs = <server_ip>/32, 10.0.0.1/32, 10.0.0.0/24
+Endpoint = <server_ip>:51820
+PersistentKeepalive = 25
+```
