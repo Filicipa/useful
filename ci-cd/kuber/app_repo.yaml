@@ -1,0 +1,57 @@
+name: Push DockerHub
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  name: "filicipa/webpage-circus"
+  tag: ${{ github.sha }}
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: "${{ env.name }}:${{ env.tag }}"
+
+  CD:
+    needs: "CI"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout argocd repo
+        uses: actions/checkout@v4
+        with:
+          repository: Filicipa/argocd
+          token: ${{ secrets.ARGOCD_REPO_TOKEN }}
+          path: argocd-repo
+
+      - name: Update image tag in circus.yaml with yq
+        run: |
+          yq e ".container.image = \"${{ env.name }}:${{ env.tag }}\"" -i argocd-repo/HelmCharts/MyChart1/values_dev.yaml
+
+      - name: Commit and push
+        run: |
+          cd argocd-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Update circus image tag to ${{ env.tag }}"
+          git push
