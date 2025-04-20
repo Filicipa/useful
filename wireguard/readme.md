@@ -12,7 +12,9 @@ wg genkey | tee privatekey | wg pubkey > publickey
 ```
 ### Create client config keys
 ```bash
-wg genkey | tee client1_privatekey | wg pubkey > client1_publickey
+cd /etc/wireguard
+export CLIENT=<client_name>
+wg genkey | tee $CLIENT"_privatekey" | wg pubkey > $CLIENT"_publickey"
 ```
 ### Create server config file `wg0.conf`
 ```ini
