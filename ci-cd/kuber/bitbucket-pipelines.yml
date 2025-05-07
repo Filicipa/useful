@@ -1,0 +1,42 @@
+image: python:3.7.2
+definitions:
+  services:
+    docker:
+      memory: 3072 # reduce memory for docker-in-docker from 1GB to 512MB
+  steps:
+    - step: &docker-build
+        name: Build and publish Docker image
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - python load_env.py .env .env.example
+          - cat .env
+          - printenv | sort
+          - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
+          - docker build --cache-from $DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:latest${DOCKER_BUILD_TAG} -t $DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:${BITBUCKET_BUILD_NUMBER}${DOCKER_BUILD_TAG} --build-arg APP_DOMAIN -f Dockerfile .
+          - docker push $DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:${BITBUCKET_BUILD_NUMBER}${DOCKER_BUILD_TAG}
+          - docker tag $DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:${BITBUCKET_BUILD_NUMBER}${DOCKER_BUILD_TAG} $DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:latest${DOCKER_BUILD_TAG}
+          - docker push $DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:latest${DOCKER_BUILD_TAG}
+          - pipe: atlassian/ssh-run:0.6.1
+            variables:
+              SSH_USER: $K8S_LOGIN_USER
+              SERVER: $K8S_IP_SERVER
+              PORT: $K8S_PORT_SERVER
+              MODE: "command"
+              COMMAND: "$K8S_OPEN_DIR_COMMAND $K8S_DEPLOYMENT_NAME $K8S_APP_NAME=$DOCKER_HUB_NAMESPACE/$DOCKER_IMAGE_NAME:$BITBUCKET_BUILD_NUMBER$DOCKER_BUILD_TAG --record --namespace=$K8S_NAMESPACE"
+pipelines:
+  branches:
+    prod:
+      - step:
+          deployment: prod
+          trigger: automatic
+          <<: *docker-build
+    dev:
+      - step:
+          deployment: dev
+          trigger: automatic
+          <<: *docker-build
+options:
+  docker: true
