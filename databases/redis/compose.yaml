@@ -9,7 +9,7 @@ services:
       retries: 3
       timeout: 5s
     networks:
-      - memelut
+      - backend
 
   redis-persistent:
     image: redis:7.4.0-bookworm
@@ -38,4 +38,4 @@ services:
       retries: 3
       timeout: 5s
     networks:
-      - compound
+      - backend

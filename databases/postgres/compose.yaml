@@ -17,8 +17,5 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - ez-miniapp
+      - backend
 
-networks:
-  ez-miniapp:
-    name: ez-miniapp
