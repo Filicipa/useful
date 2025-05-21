@@ -11,6 +11,7 @@ services:
     networks:
       - backend
 
+# Redis with persistent volume
   redis-persistent:
     image: redis:7.4.0-bookworm
     container_name: redis-persistent

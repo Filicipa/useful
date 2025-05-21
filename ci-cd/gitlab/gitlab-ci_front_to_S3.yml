@@ -10,23 +10,23 @@ build:
   image: node:18-alpine3.17
   stage: build
   script:
-  - yarn install --frozen-lockfile
-  - yarn run build
-  - yarn run export
-  - ls -a
+    - yarn install --frozen-lockfile
+    - yarn run build
+    - yarn run export
+    - ls -a
   artifacts:
     expire_in: 30 mins
     paths:
       - out
   only:
-  - main
+    - main
 
 deploy:
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   stage: deploy
   script:
-  - echo "Running deploy"
-  - aws s3 cp ./out/ s3://$S3_BUCKET_NAME/ --recursive --include "*"
-  - aws cloudfront create-invalidation --distribution-id E3FF809WBD40L7 --paths "/*"
-  only: 
-  - main
+    - echo "Running deploy"
+    - aws s3 sync ./out/ s3://$S3_BUCKET_NAME
+    - aws cloudfront create-invalidation --distribution-id E3FF809WBD40L7 --paths "/*"
+  only:
+    - main
