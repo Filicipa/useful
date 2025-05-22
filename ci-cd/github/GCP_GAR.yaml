@@ -1,0 +1,51 @@
+name: Build and Deploy to Cloud Run PROD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/workflows/**"
+
+env:
+  PROJECT_ID: ${{ secrets.PROD_PROJECT_ID }} # TODO: update Google Cloud project id
+  GAR_LOCATION: ${{ secrets.PROD_GAR_LOCATION }} # TODO: update Artifact Registry location
+  REPOSITORY: ${{ secrets.PROD_REPOSITORY }} # TODO: update Artifact Registry repository name
+  SERVICE: ${{ secrets.PROD_SERVICE }} # TODO: update Cloud Run service name
+  REGION: ${{ secrets.PROD_REGION }} # TODO: update Cloud Run service region
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        id: auth
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.PROD_GCP_CREDENTIALS }}"
+          token_format: "access_token"
+
+      - name: Docker Auth
+        id: docker-auth
+        uses: "docker/login-action@v3"
+        with:
+          registry: ${{ env.GAR_LOCATION }}-docker.pkg.dev
+          username: _json_key
+          password: "${{ secrets.PROD_GCP_CREDENTIALS }}"
+
+      - name: Build and Push Container
+        run: |
+          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
