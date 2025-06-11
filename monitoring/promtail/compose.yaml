@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./config:/config
+      - ./promtail_config:/config
       - ./data:/data/promtail
       # - /var/log:/log
     ports:
