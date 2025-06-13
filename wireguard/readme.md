@@ -32,11 +32,13 @@ PostDown = sysctl -w net.ipv4.ip_forward=0; iptables -t nat -D POSTROUTING -o et
 [Peer]
 PublicKey = ****
 AllowedIPs = 10.0.0.2/32
+PersistentKeepalive = 5
 
 # Client 2
 [Peer]
 PublicKey = ****
 AllowedIPs = 10.0.0.3/32
+PersistentKeepalive = 5
 ```
 ### Reload wireguard
 ```bash
@@ -57,7 +59,7 @@ Address = 10.0.0.5/24
 PublicKey = 
 AllowedIPs = <server_ip>/32, 10.0.0.1/32, 10.0.0.0/24
 Endpoint = <server_ip>:51820
-PersistentKeepalive = 25
+PersistentKeepalive = 5
 ```
 
 Script example
