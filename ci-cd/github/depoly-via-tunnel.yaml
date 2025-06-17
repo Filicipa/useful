@@ -1,0 +1,64 @@
+name: Prod market-maker
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  ssh-key: "${{ secrets.PROD_SSH_KEY }}"
+  host: "${{ vars.PROD_NAME }}@${{ vars.PROD_IP }}"
+  proxy_ssh: "${{ vars.PROD_PROXY_NAME }}@${{ vars.PROD_PROXY_IP }}"
+  name: "token-monitoring-bot"
+  tag: latest
+
+jobs:
+  Build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.name }}:${{ env.tag }}
+
+      - name: Save docker image
+        run: |
+          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
+
+      - name: Generate SSH key
+        run: |
+          echo "${{ env.ssh-key }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
+
+      - name: Copy image to EC2
+        run: |
+          scp \
+            -i ssh-key.pem \
+            -o ProxyCommand="ssh -i ssh-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.proxy_ssh }} -W %h:%p" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+
+  Deploy:
+    needs:
+      - Build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Generate SSH key
+        run: |
+          echo "${{ env.ssh-key }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
+
+      - name: Start image
+        run: |
+          ssh -i ssh-key.pem \
+            -o ProxyCommand="ssh -i ssh-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.proxy_ssh }} -W %h:%p" \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            ${{ env.host }} ' \
+            sudo docker load -i "${{ env.name }}.tar" && \
+            sudo docker compose -f backend/compose.yaml up -d && \
+            sudo docker image prune -af'
