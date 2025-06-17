@@ -1,4 +1,4 @@
-[Setup NET server on digital ocean]([https://](https://docs.digitalocean.com/products/networking/vpc/how-to/configure-droplet-as-gateway/))
+[Setup NET server on digital ocean]([https://](https://docs.digitalocean.com/products/networking/vpc/how-to/configure-droplet-as-gateway/)
 
 Create a '/etc/sysctl.d/99-ipv.conf' with the following lines:
 ```bash
