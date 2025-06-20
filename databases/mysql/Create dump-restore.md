@@ -1,5 +1,5 @@
 ## Dump MySQL
-`mysqldump -h blaize-site-db.coxh5lslq5wl.eu-central-1.rds.amazonaws.com -u wordpress -p blaize_prod(it's database) > blaize_prod.sql`
+`mysqldump -h <db_host> -u <db_user> -p <db_name> > <dump_name>.sql`
 
 ## Solution 1 to avoid AWS RDS errors
 Comment out or remove these lines
