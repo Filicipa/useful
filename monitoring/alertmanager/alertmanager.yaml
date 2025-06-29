@@ -1,0 +1,34 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: discord
+  group_by: ["alertname"]
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 12h
+
+receivers:
+  - name: "telegram_receiver"
+    telegram_configs:
+      - api_url: "https://api.telegram.org"
+        bot_token: xxxxx
+        chat_id: ttttttttttttt
+        message: '{{ range .Alerts }}Alert: {{ printf "%s\n" .Labels.alertname }}{{ printf "%s\n" .Annotations.summary }}{{ printf "%s\n" .Annotations.description }}{{ end }}'
+        parse_mode: "HTML"
+
+  - name: "discord"
+    discord_configs:
+      - webhook_url: <webhook>
+        username: "⚙️ Prometheus Bot"
+        content: |
+          {{- if eq .Status "firing" }}
+          🚨 **ALERT:** {{ .CommonLabels.alertname }}
+          🔥 Target: {{ .CommonLabels.instance }}
+          📝 {{ .CommonAnnotations.summary }} DOWN
+          {{- else }}
+          ✅ **RECOVERY:** {{ .CommonLabels.alertname }}
+          🔧 Target: {{ .CommonLabels.instance }}
+          📝 {{ .CommonAnnotations.summary }} UP
+          {{- end }}
+        message: ""

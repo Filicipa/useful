@@ -1,8 +1,43 @@
-- job_name: "blackbox"
+- job_name: "blackbox_ping"
   metrics_path: /probe
   params:
     module:
       - http_2xx
   file_sd_configs:
     - files:
-        - blackbox_targets.yaml
+        - /etc/prometheus/blackbox_targets.yaml
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: __param_target
+    - source_labels: [__param_target]
+      target_label: instance
+    - target_label: __address__
+      replacement: blackbox:9115
+
+- job_name: blackbox-http # To get metrics about the exporter’s targets
+  metrics_path: /probe
+  params:
+    module: [http_2xx]
+    target: [https://example.com]
+  static_configs:
+    - targets:
+        - blackbox:9115
+
+- job_name: "blackbox"
+  metrics_path: /probe
+  params:
+    module:
+      - http_2xx
+  static_configs:
+    - targets:
+        - http://prometheus.io
+        - https://prometheus.io
+        - http://example.com:8080
+        - http://example.com
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: __param_target
+    - source_labels: [__param_target]
+      target_label: instance
+    - target_label: __address__
+      replacement: blackbox:9115 # The blackbox exporter's real hostname:port.

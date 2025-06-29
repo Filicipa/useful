@@ -1,9 +1,0 @@
-rule_files:
-  - "alerts/test_rules.yml"
-
-alerting:
-  alertmanagers:
-    - scheme: http
-      static_configs:
-        - targets:
-            - "alertmanager:9093"

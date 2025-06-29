@@ -51,7 +51,6 @@ scrape_configs:
     file_sd_configs:
       - files:
           - blackbox_targets.yml
-
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
