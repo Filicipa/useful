@@ -6,3 +6,8 @@
 
 - name: Github tag name
   run: ${GITHUB_REF#refs/*/}
+
+- name: Copy image to EC2
+  run: |
+    scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+    rsync -avz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" migrations/ ${{ env.host }}:backend/migrations/
