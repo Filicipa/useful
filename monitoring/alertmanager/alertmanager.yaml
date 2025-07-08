@@ -32,3 +32,12 @@ receivers:
           📝 {{ .CommonAnnotations.summary }} UP
           {{- end }}
         message: ""
+
+  # - name: "telegram_receiver"
+  #   telegram_configs:
+  #     - api_url: "https://api.telegram.org"
+  #       send_resolved: true
+  #       bot_token: xxxxx
+  #       chat_id: ttttttttttttt
+  #       message: '{{ range .Alerts }}Alert: {{ printf "%s\n" .Labels.alertname }}{{ printf "%s\n" .Annotations.summary }}{{ printf "%s\n" .Annotations.description }}{{ end }}'
+  #       parse_mode: "HTML"
