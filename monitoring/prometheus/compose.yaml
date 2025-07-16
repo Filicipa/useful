@@ -18,8 +18,6 @@ services:
       - '--web.external-url=${PROMETHEUS_URL:-http://localhost:9090}'
       - '--web.enable-admin-api'
     restart: unless-stopped
-    expose:
-      - 9090
     ports:
       - "0.0.0.0:${PROMETHEUS_PORT:-9090}:9090"
     networks:
