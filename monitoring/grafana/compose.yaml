@@ -11,5 +11,7 @@ services:
     environment:
      - GF_SERVER_ROOT_URL=http://my.grafana.server
      - GF_INSTALL_PLUGINS=grafana-clock-panel
+     - GF_SECURITY_ADMIN_USER=admin
+     - GF_SECURITY_ADMIN_PASSWORD=z3n53J55EvS
     networks:
       - monitoring
