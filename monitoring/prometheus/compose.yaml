@@ -15,10 +15,10 @@ services:
       # - '--storage.tsdb.wal-compression=true'
       - '--storage.tsdb.min-block-duration=2h'
       - '--storage.tsdb.max-block-duration=24h'
-      - '--web.external-url=${PROMETHEUS_URL:-http://localhost:9090}'
+      - '--web.external-url=http://localhost:9090'
       - '--web.enable-admin-api'
     restart: unless-stopped
     ports:
-      - "0.0.0.0:${PROMETHEUS_PORT:-9090}:9090"
+      - "9090:9090"
     networks:
       - monitoring

@@ -9,8 +9,8 @@
   relabel_configs:
     - source_labels: [__address__]
       target_label: __param_target
-    - source_labels: [__param_target]
-      target_label: instance
+    - source_labels: [__param_target] # remove for Dashboard https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/
+      target_label: instance # remove for Dashboard https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/
     - target_label: __address__
       replacement: blackbox:9115
 
@@ -37,7 +37,7 @@
   relabel_configs:
     - source_labels: [__address__]
       target_label: __param_target
-    - source_labels: [__param_target]
-      target_label: instance
+    - source_labels: [__param_target] # remove for Dashboard https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/
+      target_label: instance # remove for Dashboard https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/
     - target_label: __address__
       replacement: blackbox:9115 # The blackbox exporter's real hostname:port.

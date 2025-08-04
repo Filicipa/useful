@@ -6,7 +6,7 @@ services:
     ports:
       - 9115:9115
     volumes:
-      - ./blackbox:/config/
+      - ./blackbox.yaml:/config/blackbox.yaml
     command:
       - '--config.file=/config/blackbox.yaml'
     networks:
