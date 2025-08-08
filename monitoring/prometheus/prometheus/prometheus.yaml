@@ -9,7 +9,7 @@ global:
 
 # Load and evaluate rules in this file every 'evaluation_interval' seconds.
 rule_files:
-  - "alerts/test_rules.yml"
+  - "alerts/*.yaml"
 
 # A scrape configuration containing exactly one endpoint to scrape.
 scrape_configs:
@@ -44,16 +44,20 @@ scrape_configs:
       - targets: ["blackbox:9115"]
 
   - job_name: "blackbox"
+    scrape_timeout: 25s
+    scrape_interval: 30s
     metrics_path: /probe
     params:
       module:
         - http_2xx
     file_sd_configs:
       - files:
-          - blackbox_targets.yml
+          - blackbox_targets.yaml
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
       - target_label: __address__
         replacement: blackbox:9115
 

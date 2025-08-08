@@ -1,0 +1,39 @@
+monitoring/alertmanager/alertmanager.yamlglobal:
+  resolve_timeout: 5m
+
+route:
+  receiver: discord
+  group_by: ["alertname", "instance", "service"]
+  #  group_wait: 3s
+  #  group_interval: 10s
+  repeat_interval: 4h
+
+receivers:
+  - name: "discord"
+    discord_configs:
+      #      - webhook_url: https://discord.com/api/webhooks/1302595057060413520/8
+      - webhook_url: https://discord.com/api/webhooks/1276546850291454036/n
+        send_resolved: true
+        username: "Prometheus Bot"
+        title: "{{ .CommonLabels.alertname }}"
+        message: "Prometheus Alert"
+        content: |
+          {{- if eq .Status "firing" -}}
+          🚨 *ALERT*: {{ .CommonLabels.alertname }}
+          💥 Severity: {{ .CommonLabels.severity }}
+          🛠 Service(s):
+          {{- range .Alerts }}
+          • {{ .Labels.service }} on {{ .Labels.instance }}
+          {{- end }}
+          📋 Description:
+          {{- range .Alerts }}
+          • {{ .Annotations.description }}
+          {{- end }}
+          {{- else -}}
+          ✅ *RESOLVED*: {{ .CommonLabels.alertname }}
+          🟢 All affected services are back to normal:
+          {{- range .Alerts }}
+          • {{ .Labels.service }} on {{ .Labels.instance }}
+          {{- end }}
+          {{- end }}
+          @everyone

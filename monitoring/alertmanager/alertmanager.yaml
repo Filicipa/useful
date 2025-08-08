@@ -9,13 +9,21 @@ route:
   repeat_interval: 12h
 
 receivers:
-  - name: "telegram_receiver"
+  - name: "telegram"
     telegram_configs:
       - api_url: "https://api.telegram.org"
         bot_token: xxxxx
-        chat_id: ttttttttttttt
-        message: '{{ range .Alerts }}Alert: {{ printf "%s\n" .Labels.alertname }}{{ printf "%s\n" .Annotations.summary }}{{ printf "%s\n" .Annotations.description }}{{ end }}'
-        parse_mode: "HTML"
+        chat_id: xxxxxx
+        message: |
+          {{ range .Alerts }}
+          {{ if eq .Status "firing" }}🚨 *DOWN*{{ else }}✅ *RECOVERED*{{ end }}
+          *Service:* `{{ .Labels.service }}`
+          *Instance:* `{{ .Labels.instance }}`
+          _{{ .Annotations.description }}_
+          {{ end }}
+        parse_mode: "Markdown"
+        # message: '{{ range .Alerts }}Alert: {{ printf "%s\n" .Labels.alertname }}{{ printf "%s\n" .Annotations.summary }}{{ printf "%s\n" .Annotations.description }}{{ end }}'
+        # parse_mode: "HTML"
 
   - name: "discord"
     discord_configs:
@@ -32,12 +40,3 @@ receivers:
           📝 {{ .CommonAnnotations.summary }} UP
           {{- end }}
         message: ""
-
-  # - name: "telegram_receiver"
-  #   telegram_configs:
-  #     - api_url: "https://api.telegram.org"
-  #       send_resolved: true
-  #       bot_token: xxxxx
-  #       chat_id: ttttttttttttt
-  #       message: '{{ range .Alerts }}Alert: {{ printf "%s\n" .Labels.alertname }}{{ printf "%s\n" .Annotations.summary }}{{ printf "%s\n" .Annotations.description }}{{ end }}'
-  #       parse_mode: "HTML"
