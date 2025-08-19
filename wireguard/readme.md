@@ -14,7 +14,7 @@ wg genkey | tee privatekey | wg pubkey > publickey
 ```bash
 cd /etc/wireguard
 export CLIENT=<client_name>
-wg genkey | tee $CLIENT"_privatekey" | wg pubkey > $CLIENT"_publickey"
+wg genkey | tee $CLIENT"_private.key" | wg pubkey > $CLIENT"_public.key"
 ```
 ### Create server config file `wg0.conf`
 ```ini
@@ -81,13 +81,13 @@ if [[ -z "$NUM" ]]; then
 fi
 
 if [[ -f "${CLIENT}_publickey" ]]; then
-  echo -e "${RED} Error: file '${CLIENT}_publickey' already exists.${NC}"
+  echo -e "${RED} Error: file '${CLIENT}_public.key' already exists.${NC}"
   exit 1
 fi
 
-wg genkey | tee "$CLIENT""_privatekey" | wg pubkey > "$CLIENT""_publickey"
+wg genkey | tee "$CLIENT""_private.key" | wg pubkey > "$CLIENT""_public.key"
 
-KEY=$(cat "${CLIENT}_publickey")
+KEY=$(cat "${CLIENT}_public.key")
 IP="10.0.0.$NUM/32"
 
 cat <<EOF >> wg0.conf
