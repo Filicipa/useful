@@ -12,7 +12,7 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=30d'
       - '--storage.tsdb.retention.size=50GB'
-      # - '--storage.tsdb.wal-compression=true'
+      - '--storage.tsdb.wal-compression'
       - '--storage.tsdb.min-block-duration=2h'
       - '--storage.tsdb.max-block-duration=24h'
       - '--web.external-url=http://localhost:9090'
