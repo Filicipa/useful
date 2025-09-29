@@ -11,7 +11,7 @@ pg_dump -h <hostname> -p 5432 -U <username> -Fc -b -v -f <dumpfilelocation.sql> 
 
 ## Restore NEED CHECK
 ```
-pg_restore -v -h <hostname> -U <username> -d <database_name> -j 2 <dumpfilelocation.sql>
+pg_restore --no-owner --no-privileges -v -h <hostname> -U <username> -d <database_name> -j 2 <dumpfilelocation.sql>
 ```
 
 ## DUMP example RDS

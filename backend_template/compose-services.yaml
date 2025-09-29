@@ -6,7 +6,7 @@ x-logging: &logging
 
 services:
   postgres:
-    image: postgres:16.3
+    image: postgres:17.6
     container_name: postgres
     restart: always
     volumes:
@@ -19,12 +19,25 @@ services:
       POSTGRES_DB: postgres
     healthcheck:
       test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d postgres'"]
-      interval: 5s
-      timeout: 5s
-      retries: 3
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - backend
     logging: *logging
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - backend
 
   caddy:
     image: caddy:latest

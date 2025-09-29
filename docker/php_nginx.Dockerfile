@@ -12,10 +12,8 @@ RUN apt-get update && apt-get install \
 
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
     php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
-    php -r "unlink('composer-setup.php');" && \
-    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
-    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
     php -r "unlink('composer-setup.php');"
+
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 WORKDIR /var/www/html/
@@ -29,7 +27,6 @@ RUN composer install && \
     php artisan view:cache && \
     # php artisan route:cache && \
     rm -rf /var/lib/apt/lists/*
-
 
 FROM php:8.2-fpm-alpine AS run
 RUN docker-php-ext-install mysqli pdo pdo_mysql

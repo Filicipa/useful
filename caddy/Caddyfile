@@ -1,12 +1,16 @@
-#{
-#    debug
-#}
-
-dragon-dev-back.blaize.technology {
-    reverse_proxy backend:3000
-    reverse_proxy /logs* dozzle:8080
+# Grafana dashboard id 22870
+{
+        servers {
+                metrics
+        }
+#        debug
 }
 
 :2019 {
 	metrics /metrics
+}
+
+dragon-dev-back.blaize.technology {
+        reverse_proxy backend:3000
+        reverse_proxy /logs* dozzle:8080
 }
