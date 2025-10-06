@@ -16,6 +16,8 @@
 - [Foundry(depricated)](./foundry/)
 - [NGINX info](./nginx/)
 - [Strapi info](./strapi/)
+- [Subgraph](./subgraph/)
+- [Supervisor](./supervisor/)
 - [Swagger](./swagger/)
 - [Traefik (proxy server) examples](./traefik/)
 - [HCP Vault templates](./vault/)

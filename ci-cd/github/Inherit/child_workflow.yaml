@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       name: name-${{ inputs.service-name }}
-      tag: ${GITHUB_SHA}
+      tag: ${{ github.sha }}
       SERVICE_NAME: ${{ inputs.service-name }}
       ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com
       AWS_REGION: ${{ vars.AWS_REGION }}

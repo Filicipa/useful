@@ -12,7 +12,7 @@ jobs:
     env:
       name: ${GITHUB_REPOSITORY#*/}"-dev"
       key: "ssh-key-scrap"
-      tag: ${GITHUB_SHA}
+      tag: ${{ github.sha }}
       host: ${{ secrets.DEV_AWS_HOST }}
     steps:
       - name: Checkout code

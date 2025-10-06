@@ -17,7 +17,7 @@ jobs:
     env:
       name: ghcr.io/yevhennsorganization/pizza-backend
       ssh-key: ${{ secrets.SSH_KEY }}
-      tag: ${GITHUB_SHA}
+      tag: ${{ github.sha }}
       host: ${{ secrets.ORACLE_USER }}"@"${{ secrets.ORACLE_IP }}
       ghcr_user: $(echo ${{ github.repository_owner }} | tr '[A-Z]' '[a-z]')
 

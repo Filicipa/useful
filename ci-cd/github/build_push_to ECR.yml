@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       name: "token-sale"
-      tag: ${GITHUB_SHA}
+      tag: ${{ github.sha }}
       ECR_REGISTRY: ${{ secrets.PROD_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.PROD_AWS_REGION }}".amazonaws.com"
       AWS_ACCOUNT_ID: ${{ secrets.PROD_AWS_ACCOUNT_ID }}
       AWS_REGION: ${{ vars.PROD_AWS_REGION }}

@@ -10,15 +10,12 @@ on:
 env:
   name: ${GITHUB_REPOSITORY#*/}"-dev"
   ssh-key: ${{ secrets.DEV_SSH_KEY }}
-  tag: ${GITHUB_SHA}
+  tag: ${{ github.sha }}
   host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
 
 jobs:
   Build:
     runs-on: ubuntu-22.04
-    env:
-      tag: ${GITHUB_SHA}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

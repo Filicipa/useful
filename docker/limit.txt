@@ -1,0 +1,11 @@
+services:
+  frontend:
+    image: example/webapp
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5' # Limits the service to 50% of a single CPU core
+          memory: 50M
+        reservations:
+          cpus: '0.2' # Reserves 20% of a single CPU core for this service
+          memory: 20M
