@@ -24,15 +24,19 @@ pg_dump -h prod-postgres.j0.eu-central-1.rds.amazonaws.com -p 5432 -U postgres -
 psql -h host -p 5432 -U user -d db-name -f file-backup.sql
 ```
 # DOCKER
-### Backup your databases
+### Backup your databases with "create DB option" 
 ```bash
-docker exec -t <your-db-container> pg_dumpall -c -U <postgres> > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql
+docker exec -t <db-container> pg_dump -U <user> -d <db_name> -c --no-owner --no-acl > dump_rds_$(date +%Y-%m-%d_%H_%M_%S).sql
 ```
 Creates filename like `dump_2023-12-25_09_15_26.sql`
+### Backup your databases without "create DB option" 
+```bash
+docker exec -t <db-container> pg_dump -U <user> -d <db_name> --no-owner --no-acl > dump_rds_$(date +%Y-%m-%d_%H_%M_%S).sql
+```
 
 If you want a smaller file size, use gzip:
 ```bash
-docker exec -t <your-db-container> pg_dumpall -c -U <postgres> | gzip > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql.gz
+docker exec -t <your-db-container> pg_dump -c -U <postgres> | gzip > dump_`date +%Y-%m-%d"_"%H_%M_%S`.sql.gz
 ```
 ### Restore your databases
 ```bash
