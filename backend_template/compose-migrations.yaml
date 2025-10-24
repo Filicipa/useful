@@ -1,0 +1,38 @@
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "100m"
+    max-file: "3"
+
+services:
+  flyway-migrations:
+    container_name: flyway-migrations
+    image: flyway/flyway:latest
+    command: -url=jdbc:postgresql://postgres:5432/scc -user=user -password=password -validateMigrationNaming="true" -connectRetries=60 migrate
+    env_file:
+      - .env
+    networks:
+      - backend
+    volumes:
+      - ./migrations:/flyway/sql
+    logging: *logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migrations:
+    container_name: migrations
+    image: ${IMAGE_NAME:TAG}
+    env_file:
+      - .env
+    networks:
+      - backend
+    logging: *logging
+    command: ["yarn", "run", "db:migrate"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  backend:
+    name: backend

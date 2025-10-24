@@ -32,16 +32,16 @@ services:
 
 tee /etc/docker/daemon.json > /dev/null <<EOT
 {
-  "metrics-addr": "0.0.0.0:9323",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "10"
-     },
-  "default-address-pools": [
-    {
-      "base": "172.17.0.0/16",
-      "size": 24
+  "metrics-addr": "0.0.0.0:9323",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  },
+  "default-address-pools": [
+    {
+      "base": "172.17.0.0/16",
+      "size": 24
     }
   ]
 }
