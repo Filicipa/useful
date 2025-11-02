@@ -10,7 +10,35 @@
 	metrics /metrics
 }
 
-dragon-dev-back.blaize.technology {
+example.com {
         reverse_proxy backend:3000
         reverse_proxy /logs* dozzle:8080
+}
+
+example.com {
+        reverse_proxy {
+            to market-executor-1:5050
+            to market-executor-2:5050
+
+            lb_policy round_robin
+
+            health_uri /api/health
+            health_interval 10s
+            health_timeout 3s
+            health_status 200
+    }
+
+}
+
+
+example.com/metrics {
+    @allowed {
+        header CF-Connecting-IP 1.1.1.1
+    }
+
+    handle @allowed {
+        reverse_proxy cadvisor:8080
+    }
+
+    respond "Forbidden" 403
 }
