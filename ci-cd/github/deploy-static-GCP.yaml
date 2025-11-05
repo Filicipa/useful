@@ -1,0 +1,41 @@
+name: PROD
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Generate .env
+        run: |
+          echo "VITE_CIRCLE_APP_ID=${{ secrets.PROD_VITE_CIRCLE_APP_ID }}" >> .env
+          echo "VITE_API_URL=${{ vars.PROD_VITE_API_URL }}" >> .env
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build site
+        run: yarn run build
+
+      - name: Google login
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: "${{ secrets.PROD_GOOGLE_CREDENTIALS }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Upload
+        run: gcloud storage rsync ./dist gs://urbanspace-prod-front --recursive --delete-unmatched-destination-objects

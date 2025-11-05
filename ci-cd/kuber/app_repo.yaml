@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout argocd repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: Filicipa/argocd
           token: ${{ secrets.ARGOCD_REPO_TOKEN }}
