@@ -52,7 +52,7 @@ jobs:
           sudo docker image prune -af'
 
       - name: Delete old packages
-        uses: actions/delete-package-versions@v4
+        uses: actions/delete-package-versions@v5
         with:
           package-name: "pizza-backend"
           package-type: "container"

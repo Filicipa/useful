@@ -9,6 +9,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-22.04
+    env:
+      BUCKET_NAME: ${{ vars.PROD_BUCKET_NAME }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+      DISTRIBUTION_ID: ${{ vars.PROD_DISTRIBUTION_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -21,7 +26,7 @@ jobs:
           aws-region: eu-central-1
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
 
@@ -32,7 +37,7 @@ jobs:
         run: npm run build
 
       - name: Deploy static site to S3 bucket
-        run: aws s3 sync ./dist/ s3://jedaite-static-site/ --delete
+        run: aws s3 sync ./dist/ s3://${{ env.BUCKET_NAME }}/ --delete
 
       - name: CloudFront invalidation
-        run: aws cloudfront create-invalidation --distribution-id E31ZG2RT6227CO --paths "/*"
+        run: aws cloudfront create-invalidation --distribution-id ${{ env.DISTRIBUTION_ID }} --paths "/*"

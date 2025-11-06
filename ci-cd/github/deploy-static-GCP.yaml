@@ -9,9 +9,12 @@ on:
 jobs:
   Deploy:
     runs-on: ubuntu-22.04
+    env:
+      BUCKET_NAME: ${{ vars.PROD_BUCKET_NAME }}
+      GOOGLE_CREDENTIALS: ${{ secrets.PROD_GOOGLE_CREDENTIALS }}
     steps:
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -32,10 +35,10 @@ jobs:
       - name: Google login
         uses: google-github-actions/auth@v3
         with:
-          credentials_json: "${{ secrets.PROD_GOOGLE_CREDENTIALS }}"
+          credentials_json: "${{ env.GOOGLE_CREDENTIALS }}"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Upload
-        run: gcloud storage rsync ./dist gs://urbanspace-prod-front --recursive --delete-unmatched-destination-objects
+        run: gcloud storage rsync ./dist gs://${{ env.BUCKET_NAME }} --recursive --delete-unmatched-destination-objects

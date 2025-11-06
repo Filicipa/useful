@@ -10,7 +10,7 @@ jobs:
     name: Prettier
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Run code formatting check
@@ -20,7 +20,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Run lint check
@@ -30,7 +30,7 @@ jobs:
     name: Frontend typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Run typecheck
@@ -41,7 +41,7 @@ jobs:
     needs: frontend-typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Build frontend
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref != 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.base_ref }}
       - uses: ./.github/actions/setup-node
@@ -76,7 +76,7 @@ jobs:
     name: Backend typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Run typecheck
@@ -87,7 +87,7 @@ jobs:
     needs: backend-typecheck
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Build backend
@@ -103,7 +103,7 @@ jobs:
     needs: frontend-build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Run unit tests
@@ -114,7 +114,7 @@ jobs:
     needs: [frontend-build, backend-build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Install Playwright
@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/setup-node
       - uses: ./.github/actions/install-packages
       - name: Copy original models
@@ -162,7 +162,7 @@ jobs:
     needs: [frontend-build, frontend-build-base]
     if: github.ref != 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Download base stats
         uses: actions/download-artifact@v3
         with:
