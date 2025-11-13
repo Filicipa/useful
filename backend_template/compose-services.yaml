@@ -56,11 +56,7 @@ services:
       - backend
     logging: *logging
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:2019/metrics || exit 1",
-        ]
+      test: "wget --no-verbose --tries=1 --spider http://localhost:2019/metrics || exit 1"
       interval: 1m30s
       timeout: 10s
       retries: 3
