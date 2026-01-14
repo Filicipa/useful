@@ -1,6 +1,16 @@
 ## Dump MySQL
 `mysqldump -h <db_host> -u <db_user> -p <db_name> > <dump_name>.sql`
 
+### For cloud managment DB
+```
+mysqldump \
+  -h <db_host> -u <db_user> -p <db_name> \
+  --single-transaction \
+  --set-gtid-purged=OFF \
+  --no-tablespaces \
+  > <dump_name>.sql
+```
+
 ## Dump MySQL RDS
 `mysqldump --single-transaction --set-gtid-purged=OFF -h <db_host> -u <db_user> -p <db_name> > <dump_name>.sql`
 
