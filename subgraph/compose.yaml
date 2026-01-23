@@ -18,6 +18,8 @@ services:
       ipfs: "ipfs:5001"
       ethereum: "mainnet:https://virtual.polygon.rpc.tenderly.co/41ea4f43-fe07-4fab-8ca8-1f3918d99869"
       GRAPH_LOG: info
+    networks:
+      - subgraph
 
   ipfs:
     image: ipfs/kubo:v0.39.0
@@ -25,6 +27,8 @@ services:
       - "5001:5001"
     volumes:
       - ./data/ipfs:/data/ipfs:Z
+    networks:
+      - subgraph
 
   postgres:
     image: postgres:16.4
@@ -47,3 +51,9 @@ services:
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data:Z
+    networks:
+      - subgraph
+
+networks:
+  subgraph:
+    name: subgraph
