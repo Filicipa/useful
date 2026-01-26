@@ -1,0 +1,23 @@
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "5m"
+    max-file: "3"
+
+services:
+  otel-collector:
+    #    image: otel/opentelemetry-collector-contrib:0.144.0
+    image: otel/opentelemetry-collector:0.144.0
+    container_name: otel-collector
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+    ports:
+      - 1888:1888 # pprof
+      - 8888:8888 # metrics exposed by the collector
+      - 8889:8889 # metrics exporter (if you expose them)
+      - 13133:13133 # health_check
+      - 4317:4317 # OTLP gRPC
+      - 4318:4318 # OTLP HTTP
+    networks:
+      - backend
+    logging: *logging
