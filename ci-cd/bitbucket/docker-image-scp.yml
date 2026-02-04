@@ -1,0 +1,40 @@
+definitions:
+  services:
+    docker:
+      memory: 2048
+  steps:
+    - step: &docker-build
+        name: Build and publish Docker image
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - docker build -t $IMAGE_NAME:latest .
+          - docker save -o $IMAGE_NAME.tar $IMAGE_NAME:latest
+          - chmod 755 $IMAGE_NAME.tar
+          - ls -la
+          - pipe: atlassian/scp-deploy:1.5.2
+            variables:
+              USER: "$DO_USER"
+              SERVER: "$DO_SERVER"
+              REMOTE_PATH: "/root/$IMAGE_NAME.tar"
+              LOCAL_PATH: "$IMAGE_NAME.tar"
+          - pipe: atlassian/ssh-run:0.8.1
+            variables:
+              SSH_USER: "$DO_USER"
+              SERVER: "$DO_SERVER"
+              COMMAND: "docker load -i $IMAGE_NAME.tar && docker compose -f backend/compose.yaml up -d"
+
+pipelines:
+  branches:
+    main:
+      - step:
+          deployment: production
+          trigger: automatic
+          <<: *docker-build
+    dev:
+      - step:
+          deployment: dev
+          trigger: automatic
+          <<: *docker-build

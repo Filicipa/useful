@@ -1,0 +1,89 @@
+image: node:18
+definitions:
+  caches:
+    my-node-cache:
+      key:
+        files:
+          - app/package.json
+      path: app/node_modules
+
+pipelines:
+  branches:
+    "{deploy/*}":
+      - parallel:
+          - step:
+              name: Build and Test
+              caches:
+                - my-node-cache
+              script:
+                - cd app
+                - npm install
+      - step:
+          name: Get the API Key
+          image: amazon/aws-cli
+          script:
+            - yum install -y jq
+            - source bitbucket-pipelines-env.sh
+            - echo "Stage ${STAGE}"
+            - aws apigateway get-api-keys --query "items[?name=='paperchase-api-key-${STAGE}'].value" --include-values --output json --region us-east-1 | jq -r '.[0]' > paperchase-serverless-key.txt
+            - cat paperchase-serverless-key.txt
+            - aws apigateway get-rest-apis --query "items[?name=='paperchase-api-gw-${STAGE}'].id" --output text > paperchase-api-id.txt
+            - cat paperchase-api-id.txt
+          artifacts:
+            - paperchase-serverless-key.txt
+            - paperchase-api-id.txt
+      - step:
+          name: Terraform resources
+          image: hashicorp/terraform:1.7
+          script:
+            - source bitbucket-pipelines-env.sh
+            - echo "Terraform resources for Paperchase Aging Web Console"
+            - echo "Stage ${STAGE}"
+            - cat paperchase-api-id.txt
+            - paperchase_api_id=$(cat paperchase-api-id.txt)
+            - echo $paperchase_api_id
+            - cd terraform
+            - terraform init
+            - terraform workspace select $STAGE || terraform workspace new $STAGE
+            - terraform apply -auto-approve -var="api_gateway_id=${paperchase_api_id}"
+      - step:
+          name: Deploy to Production
+          deployment: Production
+          script:
+            - source bitbucket-pipelines-env.sh
+            - echo "Deploying Paperchase Aging Web Console"
+            - echo "Stage ${STAGE}"
+            - if [ "$STAGE" == "aging-prod"* ]; then PROD="true"; else PROD="false"; fi
+            - mkdir -p app/src/config
+            - paperchase_serverless_key=$(<paperchase-serverless-key.txt)
+            - echo "REACT_APP_PAPERCHASE_API_HOST=/api" >> app/.env
+            - echo "REACT_APP_PAPERCHASE_API_KEY=${paperchase_serverless_key}" >> app/.env
+            - echo "REACT_APP_PAPERCHASE_PREVIEW_HOST=https://${STAGE}-preview.impactaging.com" >> app/.env
+            - echo "REACT_APP_PUBLIC_SITE=https://www.aging-us.com" >> app/.env
+            - echo "REACT_APP_PAPERCHASE_ADMIN=https://${STAGE}.impactaging.com" >> app/.env
+            - cat app/.env
+            # deploy the web console
+            - echo "REACT_APP_TEAM=production" >> app/.env
+            - cd app && npm install --quiet --force  && npm run build
+            - ls -alF ./
+            - pipe: atlassian/aws-s3-deploy:1.1.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                S3_BUCKET: "paperchase-web-console-${STAGE}"
+                LOCAL_PATH: "build"
+            - cd ..
+            # deploy the pr console
+            - sed -i '$ d' "app/.env"
+            - echo "REACT_APP_TEAM=pr" >> app/.env
+            - cd app && npm install --quiet --force  && npm run build
+            - ls -alF ./
+            - pipe: atlassian/aws-s3-deploy:1.1.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+                S3_BUCKET: "paperchase-pr-console-${STAGE}"
+                LOCAL_PATH: "build"
+            - cd ..

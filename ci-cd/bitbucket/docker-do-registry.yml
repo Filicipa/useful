@@ -1,0 +1,36 @@
+definitions:
+  services:
+    docker:
+      memory: 2048
+
+  steps:
+    - step: &docker-build
+        name: Build and publish Docker image
+        services:
+          - docker
+        caches:
+          - docker
+        script:
+          - export IMAGE_TAG=${BITBUCKET_COMMIT}
+          - export ENV_TAG=${BITBUCKET_DEPLOYMENT_ENVIRONMENT}
+          - echo "$DO_REGISTRY_TOKEN" | docker login $DO_REGISTRY -u oauth2 --password-stdin
+          - echo "${ENVS}" | base64 -d > .env
+          - cat .env
+          - docker build -t $DO_REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+          - docker tag $DO_REGISTRY/$IMAGE_NAME:$IMAGE_TAG $DO_REGISTRY/$IMAGE_NAME:${ENV_TAG}-latest
+          - docker push $DO_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          - docker push $DO_REGISTRY/$IMAGE_NAME:${ENV_TAG}-latest
+
+pipelines:
+  branches:
+    deploy/prod1:
+      - step:
+          deployment: production
+          trigger: automatic
+          <<: *docker-build
+
+    deploy/stage1:
+      - step:
+          deployment: stage
+          trigger: automatic
+          <<: *docker-build
