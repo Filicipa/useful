@@ -48,7 +48,7 @@ jobs:
           docker tag ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }} ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
