@@ -1,4 +1,4 @@
-FROM node:22.13.1-alpine AS build
+FROM node:22.20.0-alpine AS build
 ARG SERVICE_NAME='name'
 WORKDIR /usr/src/app
 COPY package*.json ./
@@ -7,7 +7,7 @@ RUN npm ci
 COPY ./ ./
 RUN npm run build ${SERVICE_NAME}
 
-FROM node:22.13.1-alpine AS production
+FROM node:22.20.0-alpine AS production
 ARG SERVICE_NAME='name'
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
