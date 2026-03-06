@@ -6,11 +6,11 @@ x-logging: &logging
 
 services:
   postgres:
-    image: postgres:17.6
+    image: postgres:18.2
     container_name: postgres
     restart: always
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql
     ports:
       - 5432:5432
     environment:

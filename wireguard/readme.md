@@ -10,6 +10,12 @@ cd /etc/wireguard
 umask 077
 wg genkey | tee server_private_key | wg pubkey > server_public_key
 ```
+### Create client config keys
+```bash
+cd /etc/wireguard
+export CLIENT=<client_name>
+wg genkey | tee $CLIENT"_private.key" | wg pubkey > $CLIENT"_public.key"
+```
 ### Create server config file `wg0.conf`
 ```ini
 [Interface]
@@ -33,12 +39,6 @@ PersistentKeepalive = 5
 PublicKey = ****
 AllowedIPs = 10.0.0.3/32
 PersistentKeepalive = 5
-```
-### Create client config keys
-```bash
-cd /etc/wireguard
-export CLIENT=<client_name>
-wg genkey | tee $CLIENT"_private.key" | wg pubkey > $CLIENT"_public.key"
 ```
 ### Reload wireguard
 ```bash
