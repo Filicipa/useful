@@ -1,0 +1,10 @@
+.git
+.github
+.gitignore
+.results
+Dockerfile
+.dockerignore
+node_modules
+dist
+.next
+build

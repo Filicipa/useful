@@ -9,8 +9,6 @@ RUN npm run build ${SERVICE_NAME}
 FROM node:22.20.0-alpine as production
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
-# RUN apk --no-cache add curl
-# HEALTHCHECK CMD curl --fail http://localhost:8080/api/health || exit 1
 WORKDIR /usr/src/app
 COPY package*.json ./
 COPY git-sha.* ./
