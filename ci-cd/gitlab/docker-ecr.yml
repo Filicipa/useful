@@ -1,11 +1,8 @@
 variables:
-  ECR_REGISTRY: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
-  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-  AWS_DEFAULT_REGION: eu-central-1
-  SSH_KEY: $SSH_KEY
-  SSH_IP: $SSH_IP
-  SSH_USER: $SSH_USER
+  ECR_REGISTRY: "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+  SSH_KEY: $DEV_SSH_KEY
+  SSH_USER: $DEV_SSH_USER
+  SSH_IP: $DEV_SSH_IP
 
 stages:
   # - test
@@ -25,16 +22,6 @@ build:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   script:
-    - mkdir -p /kaniko/.docker
-    - |
-      cat > /kaniko/.docker/config.json <<EOF
-      {
-        "credHelpers": {
-          "${ECR_REGISTRY}": "ecr-login"
-        }
-      }
-      EOF
-
     - |
       /kaniko/executor \
         --context $CI_PROJECT_DIR \
@@ -62,9 +49,11 @@ deploy:
     - dev
   image: alpine:3.18
   before_script:
-    - echo $SSH_KEY >> ssh-key.pem
+    - cat $SSH_KEY | base64 -d > ssh-key.pem
     - chmod 400 ssh-key.pem
     - apk add --no-cache openssh-client
+    - ls -la
+    - cat ssh-key.pem
   script:
     - |
       ssh -i ssh-key.pem -o StrictHostKeyChecking=no $SSH_USER@$SSH_IP "
