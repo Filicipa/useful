@@ -1,0 +1,74 @@
+variables:
+  ECR_REGISTRY: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  AWS_DEFAULT_REGION: eu-central-1
+  SSH_KEY: $SSH_KEY
+  SSH_IP: $SSH_IP
+  SSH_USER: $SSH_USER
+
+stages:
+  # - test
+  - build
+  - deploy
+
+# sast:
+#   stage: test
+# include:
+# - template: Security/SAST.gitlab-ci.yml
+
+build:
+  stage: build
+  only:
+    - dev
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - |
+      cat > /kaniko/.docker/config.json <<EOF
+      {
+        "credHelpers": {
+          "${ECR_REGISTRY}": "ecr-login"
+        }
+      }
+      EOF
+
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/Dockerfile \
+        --target api \
+        --destination $ECR_REGISTRY/podproza/dev-api:$CI_COMMIT_SHORT_SHA \
+        --destination $ECR_REGISTRY/podproza/dev-api:latest \
+        --cache=true \
+        --cache-repo=$ECR_REGISTRY/podproza/cache
+
+    - |
+      /kaniko/executor \
+        --context $CI_PROJECT_DIR \
+        --dockerfile $CI_PROJECT_DIR/Dockerfile \
+        --target worker \
+        --destination $ECR_REGISTRY/podproza/dev-worker:$CI_COMMIT_SHORT_SHA \
+        --destination $ECR_REGISTRY/podproza/dev-worker:latest \
+        --cache=true \
+        --cache-repo=$ECR_REGISTRY/podproza/cache
+
+deploy:
+  stage: deploy
+  needs: [build]
+  only:
+    - dev
+  image: alpine:3.18
+  before_script:
+    - echo $SSH_KEY >> ssh-key.pem
+    - chmod 400 ssh-key.pem
+    - apk add --no-cache openssh-client
+  script:
+    - |
+      ssh -i ssh-key.pem -o StrictHostKeyChecking=no $SSH_USER@$SSH_IP "
+        aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_REGISTRY
+        docker compose -f backend/compose.yaml up -d
+        docker image prune -af
+        "
