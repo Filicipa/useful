@@ -1,0 +1,19 @@
+services:
+  valkey:
+    image: valkey/valkey:8.1.6
+    container_name: valkey
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - valkey
+
+networks:
+  valkey:
+    name: valkey
