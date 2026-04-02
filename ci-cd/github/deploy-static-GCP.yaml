@@ -19,7 +19,7 @@ jobs:
           node-version: 22
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Generate .env
         run: |

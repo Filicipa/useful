@@ -17,9 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
-        with:
-          path: "static/"
+        uses: actions/checkout@v6
 
       - name: Add SSH key
         run: |

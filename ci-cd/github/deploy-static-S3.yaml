@@ -16,7 +16,7 @@ jobs:
       DISTRIBUTION_ID: ${{ vars.PROD_DISTRIBUTION_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
