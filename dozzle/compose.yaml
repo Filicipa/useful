@@ -12,5 +12,11 @@ services:
       DOZZLE_BASE: /logs
       DOZZLE_AUTH_PROVIDER: simple
       DOZZLE_HOSTNAME: mywebsite.xyz
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 20s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
     networks:
       - networkName
