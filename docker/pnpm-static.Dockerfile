@@ -6,7 +6,6 @@ WORKDIR /app
 COPY .npmrc package.json pnpm-lock.yaml next.config.js ./
 RUN pnpm install --frozen-lockfile
 COPY ./ ./
-COPY --from=dependencies /app/node_modules ./node_modules
 RUN pnpm build
 RUN pnpm prune --prod
 
