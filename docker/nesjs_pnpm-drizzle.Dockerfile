@@ -23,4 +23,4 @@ RUN chmod 500 ./start.sh
 
 USER node
 
-ENTRYPOINT "./start.sh"
+ENTRYPOINT ["./start.sh"]

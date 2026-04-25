@@ -11,4 +11,4 @@ COPY --from=build /app/application.properties ./
 COPY --from=build /app/quartz.properties ./
 EXPOSE 8080
 
-CMD java -jar cex24.jar
+CMD ["java", "-jar", "cex24.jar"]

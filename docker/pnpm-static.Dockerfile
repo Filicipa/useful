@@ -1,7 +1,7 @@
 FROM node:22.20.0-alpine AS base
 RUN npm i -g pnpm
 
-FROM base AS dependencies
+FROM base AS builder
 WORKDIR /app
 COPY .npmrc package.json pnpm-lock.yaml next.config.js ./
 RUN pnpm install --frozen-lockfile
