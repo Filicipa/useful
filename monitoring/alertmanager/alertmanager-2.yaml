@@ -3,7 +3,7 @@ global:
 
 route:
   receiver: discord
-  group_by: ["alertname", "instance", "service"]
+  group_by: [ "alertname", "instance", "service" ]
   #  group_wait: 3s
   #  group_interval: 10s
   repeat_interval: 4h
@@ -11,7 +11,6 @@ route:
 receivers:
   - name: "discord"
     discord_configs:
-      #      - webhook_url: https://discord.com/api/webhooks/1302595057060413520/8
       - webhook_url: https://discord.com/api/webhooks/1276546850291454036/n
         send_resolved: true
         username: "Prometheus Bot"

@@ -17,14 +17,14 @@ scrape_configs:
         refresh_interval: 5s
         filters:
           - name: name
-            values: [stage-bot]
+            values: [ stage-bot ]
 
     relabel_configs:
-      - source_labels: [__meta_docker_container_name]
-        regex: '\/?(.*)'
+      - source_labels: [ __meta_docker_container_name ]
+        regex: "\\/?(.*)"
         # regex: '\/?(nginx|grafana)'
         target_label: container_name
-      - source_labels: ["__meta_docker_container_id"]
+      - source_labels: [ "__meta_docker_container_id" ]
         target_label: container_id
       - target_label: <label_name>
         replacement: <example>
@@ -43,9 +43,8 @@ scrape_configs:
         job: "api"
         service: "api"
     relabel_configs:
-      - source_labels: ["__syslog_message_hostname"]
+      - source_labels: [ "__syslog_message_hostname" ]
         target_label: "hostname"
-
 
   - job_name: system
     pipeline_stages:
