@@ -1,0 +1,20 @@
+services:
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_URI: "postgres:5432/db?sslmode=disable"
+      DATA_SOURCE_USER: user
+      DATA_SOURCE_PASS: password
+    command:
+      - "--collector.stat_statements"
+      - "--collector.stat_statements.limit=30"
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: backend
+    external: true

@@ -1,6 +1,6 @@
 services:
   nats:
-    image: nats:2.10.26
+    image: nats:2.14.0
     container_name: nats
     restart: always
     ports:
