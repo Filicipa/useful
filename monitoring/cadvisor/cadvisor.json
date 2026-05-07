@@ -2,9 +2,9 @@
     "apiVersion": "dashboard.grafana.app/v2",
     "kind": "Dashboard",
     "metadata": {
-        "name": "m0arCBf7k",
-        "generation": 4,
-        "creationTimestamp": "2026-05-07T11:01:00Z",
+        "name": "Docker-Monitoring",
+        "generation": 2,
+        "creationTimestamp": "2026-05-07T20:22:38Z",
         "labels": {},
         "annotations": {}
     },
@@ -22,9 +22,6 @@
                             "matchAny": false,
                             "tags": [],
                             "type": "dashboard"
-                        },
-                        "labels": {
-                            "grafana.app/export-label": "grafana-1"
                         }
                     },
                     "enable": true,
@@ -36,14 +33,14 @@
             }
         ],
         "cursorSync": "Crosshair",
-        "description": "Docker monitoring with Prometheus and cAdvisor with node and service selection",
+        "description": "The Docker monitoring dashboard with App Info, Cache",
         "editable": true,
         "elements": {
             "panel-1": {
                 "kind": "Panel",
                 "spec": {
                     "id": 1,
-                    "title": "Memory Usage",
+                    "title": "Memory Usage (RAM)",
                     "description": "",
                     "links": [],
                     "data": {
@@ -58,13 +55,13 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
+                                                "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "container_memory_usage_bytes{instance=~\"$instance\", name=~\"$container\"}",
+                                                "expr": "sum by (name) (container_memory_working_set_bytes{instance=~\"$instance\", name=~\"$container\", name!=\"\"})",
                                                 "interval": "",
                                                 "intervalFactor": 1,
                                                 "legendFormat": "{{name}}",
-                                                "metric": "container_memory_usage_bytes",
+                                                "metric": "container_memory_working_set_bytes",
                                                 "range": true,
                                                 "step": 10
                                             },
@@ -163,10 +160,258 @@
                     }
                 }
             },
-            "panel-10": {
+            "panel-14": {
                 "kind": "Panel",
                 "spec": {
-                    "id": 10,
+                    "id": 14,
+                    "title": "Memory Cached (Page Cache)",
+                    "description": "",
+                    "links": [],
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "query": {
+                                            "kind": "DataQuery",
+                                            "group": "prometheus",
+                                            "version": "v0",
+                                            "spec": {
+                                                "editorMode": "code",
+                                                "exemplar": true,
+                                                "expr": "sum by (name) (container_memory_cache{instance=~\"$instance\", name=~\"$container\", name!=\"\"})",
+                                                "interval": "",
+                                                "intervalFactor": 1,
+                                                "legendFormat": "{{name}}",
+                                                "range": true,
+                                                "step": 10
+                                            },
+                                            "labels": {
+                                                "grafana.app/export-label": "prometheus-1"
+                                            }
+                                        },
+                                        "refId": "A",
+                                        "hidden": false
+                                    }
+                                }
+                            ],
+                            "transformations": [],
+                            "queryOptions": {}
+                        }
+                    },
+                    "vizConfig": {
+                        "kind": "VizConfig",
+                        "group": "timeseries",
+                        "version": "13.0.1",
+                        "spec": {
+                            "options": {
+                                "annotations": {
+                                    "clustering": -1,
+                                    "multiLane": false
+                                },
+                                "legend": {
+                                    "calcs": [
+                                        "mean",
+                                        "max"
+                                    ],
+                                    "displayMode": "table",
+                                    "placement": "right",
+                                    "showLegend": true
+                                },
+                                "tooltip": {
+                                    "hideZeros": false,
+                                    "mode": "single",
+                                    "sort": "none"
+                                }
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "unit": "bytes",
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "value": 0,
+                                                "color": "green"
+                                            }
+                                        ]
+                                    },
+                                    "color": {
+                                        "mode": "palette-classic"
+                                    },
+                                    "custom": {
+                                        "axisBorderShow": false,
+                                        "axisCenteredZero": false,
+                                        "axisColorMode": "text",
+                                        "axisLabel": "",
+                                        "axisPlacement": "auto",
+                                        "barAlignment": 0,
+                                        "barWidthFactor": 0.6,
+                                        "drawStyle": "line",
+                                        "fillOpacity": 10,
+                                        "gradientMode": "none",
+                                        "hideFrom": {
+                                            "legend": false,
+                                            "tooltip": false,
+                                            "viz": false
+                                        },
+                                        "insertNulls": false,
+                                        "lineInterpolation": "linear",
+                                        "lineWidth": 2,
+                                        "pointSize": 1,
+                                        "scaleDistribution": {
+                                            "type": "linear"
+                                        },
+                                        "showPoints": "never",
+                                        "showValues": false,
+                                        "spanNulls": 600000,
+                                        "stacking": {
+                                            "group": "A",
+                                            "mode": "none"
+                                        },
+                                        "thresholdsStyle": {
+                                            "mode": "off"
+                                        }
+                                    }
+                                },
+                                "overrides": []
+                            }
+                        }
+                    }
+                }
+            },
+            "panel-17": {
+                "kind": "Panel",
+                "spec": {
+                    "id": 17,
+                    "title": "Containers Inventory & Uptime",
+                    "description": "",
+                    "links": [],
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "query": {
+                                            "kind": "DataQuery",
+                                            "group": "prometheus",
+                                            "version": "v0",
+                                            "spec": {
+                                                "expr": "(time() - container_start_time_seconds{instance=~\"$instance\",name=~\"$container\",name!=\"\"})/86400",
+                                                "format": "table",
+                                                "instant": true,
+                                                "interval": "",
+                                                "legendFormat": "{{name}}"
+                                            },
+                                            "labels": {
+                                                "grafana.app/export-label": "prometheus-1"
+                                            }
+                                        },
+                                        "refId": "A",
+                                        "hidden": false
+                                    }
+                                }
+                            ],
+                            "transformations": [
+                                {
+                                    "kind": "Transformation",
+                                    "group": "organize",
+                                    "spec": {
+                                        "options": {
+                                            "excludeByName": {
+                                                "id": true,
+                                                "instance": true
+                                            },
+                                            "indexByName": {},
+                                            "renameByName": {
+                                                "Value": "Uptime (Days)",
+                                                "image": "Image",
+                                                "name": "Name"
+                                            }
+                                        }
+                                    }
+                                }
+                            ],
+                            "queryOptions": {}
+                        }
+                    },
+                    "vizConfig": {
+                        "kind": "VizConfig",
+                        "group": "table",
+                        "version": "13.0.1",
+                        "spec": {
+                            "options": {
+                                "cellHeight": "sm",
+                                "showHeader": true,
+                                "sortBy": []
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "value": 0,
+                                                "color": "green"
+                                            }
+                                        ]
+                                    },
+                                    "custom": {
+                                        "align": "auto",
+                                        "cellOptions": {
+                                            "type": "auto"
+                                        },
+                                        "filterable": false,
+                                        "footer": {
+                                            "reducers": []
+                                        },
+                                        "inspect": false
+                                    }
+                                },
+                                "overrides": [
+                                    {
+                                        "matcher": {
+                                            "id": "byName",
+                                            "options": "Uptime (Days)"
+                                        },
+                                        "properties": [
+                                            {
+                                                "id": "unit",
+                                                "value": "d"
+                                            },
+                                            {
+                                                "id": "decimals",
+                                                "value": 1
+                                            },
+                                            {
+                                                "id": "custom.cellOptions",
+                                                "value": {
+                                                    "type": "color-text"
+                                                }
+                                            },
+                                            {
+                                                "id": "color",
+                                                "value": {
+                                                    "fixedColor": "dark-green",
+                                                    "mode": "fixed"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            "panel-18": {
+                "kind": "Panel",
+                "spec": {
+                    "id": 18,
                     "title": "CPU Cores",
                     "description": "",
                     "links": [],
@@ -182,15 +427,10 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
-                                                "exemplar": true,
+                                                "editorMode": "code",
                                                 "expr": "sum(machine_cpu_cores{instance=~\"$instance\"})",
-                                                "interval": "",
-                                                "intervalFactor": 2,
-                                                "legendFormat": "",
-                                                "metric": "container_memory_usage_bytes",
-                                                "range": true,
-                                                "step": 240
+                                                "legendFormat": "__auto",
+                                                "range": true
                                             },
                                             "labels": {
                                                 "grafana.app/export-label": "prometheus-1"
@@ -202,9 +442,7 @@
                                 }
                             ],
                             "transformations": [],
-                            "queryOptions": {
-                                "maxDataPoints": 100
-                            }
+                            "queryOptions": {}
                         }
                     },
                     "vizConfig": {
@@ -215,8 +453,8 @@
                             "options": {
                                 "colorMode": "none",
                                 "graphMode": "none",
-                                "justifyMode": "auto",
-                                "orientation": "horizontal",
+                                "justifyMode": "center",
+                                "orientation": "auto",
                                 "percentChangeColorMode": "standard",
                                 "reduceOptions": {
                                     "calcs": [
@@ -232,23 +470,16 @@
                             "fieldConfig": {
                                 "defaults": {
                                     "unit": "none",
-                                    "mappings": [
-                                        {
-                                            "type": "special",
-                                            "options": {
-                                                "match": "null",
-                                                "result": {
-                                                    "text": "N/A"
-                                                }
-                                            }
-                                        }
-                                    ],
                                     "thresholds": {
                                         "mode": "absolute",
                                         "steps": [
                                             {
                                                 "value": 0,
                                                 "color": "green"
+                                            },
+                                            {
+                                                "value": 80,
+                                                "color": "red"
                                             }
                                         ]
                                     },
@@ -259,15 +490,14 @@
                                 "overrides": []
                             }
                         }
-                    },
-                    "transparent": true
+                    }
                 }
             },
             "panel-2": {
                 "kind": "Panel",
                 "spec": {
                     "id": 2,
-                    "title": "CPU Usage",
+                    "title": "CPU Usage (per Core)",
                     "description": "",
                     "links": [],
                     "data": {
@@ -282,9 +512,9 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
+                                                "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "rate(container_cpu_usage_seconds_total{instance=~\"$instance\", name=~\"$container\"}[$__rate_interval]) * 100",
+                                                "expr": "sum by (name) (rate(container_cpu_usage_seconds_total{instance=~\"$instance\", name=~\"$container\", name!=\"\"}[$__rate_interval]))",
                                                 "interval": "",
                                                 "intervalFactor": 1,
                                                 "legendFormat": "{{name}}",
@@ -323,7 +553,9 @@
                                     ],
                                     "displayMode": "table",
                                     "placement": "right",
-                                    "showLegend": true
+                                    "showLegend": true,
+                                    "sortBy": "Max",
+                                    "sortDesc": true
                                 },
                                 "tooltip": {
                                     "hideZeros": false,
@@ -333,7 +565,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
-                                    "unit": "percent",
+                                    "unit": "percentunit",
                                     "decimals": 2,
                                     "thresholds": {
                                         "mode": "absolute",
@@ -392,7 +624,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 3,
-                    "title": "Network",
+                    "title": "Network Traffic",
                     "description": "",
                     "links": [],
                     "data": {
@@ -409,11 +641,10 @@
                                             "spec": {
                                                 "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "sum by(container) (rate(container_network_receive_bytes_total{instance=~\"$instance\", name=~\"$container\"}[$__rate_interval]))",
+                                                "expr": "sum by (name) (rate(container_network_receive_bytes_total{instance=~\"$instance\", name=~\"$container\", name!=\"\"}[$__rate_interval]))",
                                                 "interval": "",
                                                 "intervalFactor": 1,
-                                                "legendFormat": "recv {{container}}",
-                                                "metric": "container_network_receive_bytes_total",
+                                                "legendFormat": "in {{name}}",
                                                 "range": true,
                                                 "step": 20
                                             },
@@ -435,10 +666,10 @@
                                             "spec": {
                                                 "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "-(sum by (container) (rate(container_network_transmit_bytes_total{instance=~\"$instance\",name=~\"$container\"}[$__rate_interval])))",
+                                                "expr": "-(sum by (name) (rate(container_network_transmit_bytes_total{instance=~\"$instance\",name=~\"$container\", name!=\"\"}[$__rate_interval])))",
                                                 "interval": "",
                                                 "intervalFactor": 1,
-                                                "legendFormat": "trans {{container}}",
+                                                "legendFormat": "out {{name}}",
                                                 "range": true
                                             },
                                             "labels": {
@@ -541,7 +772,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 5,
-                    "title": "Container Memory Usage",
+                    "title": "Total App RAM",
                     "description": "",
                     "links": [],
                     "data": {
@@ -556,13 +787,12 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
+                                                "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "sum(container_memory_usage_bytes{instance=~\"$instance\"} / 1024) / 1024",
+                                                "expr": "sum(container_memory_working_set_bytes{instance=~\"$instance\", name!=\"\"})",
                                                 "interval": "",
                                                 "intervalFactor": 2,
                                                 "legendFormat": "",
-                                                "metric": "container_memory_usage_bytes",
                                                 "range": true,
                                                 "step": 240
                                             },
@@ -605,7 +835,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
-                                    "unit": "mbytes",
+                                    "unit": "bytes",
                                     "mappings": [
                                         {
                                             "type": "special",
@@ -633,15 +863,14 @@
                                 "overrides": []
                             }
                         }
-                    },
-                    "transparent": true
+                    }
                 }
             },
             "panel-6": {
                 "kind": "Panel",
                 "spec": {
                     "id": 6,
-                    "title": "Container CPU Usage",
+                    "title": "Total App CPU",
                     "description": "",
                     "links": [],
                     "data": {
@@ -656,13 +885,12 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
+                                                "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "sum(irate(container_cpu_usage_seconds_total{instance=~\"$instance\"}[$__rate_interval]) * 100)",
+                                                "expr": "sum(rate(container_cpu_usage_seconds_total{instance=~\"$instance\", name!=\"\"}[$__rate_interval]))",
                                                 "interval": "",
                                                 "intervalFactor": 2,
                                                 "legendFormat": "",
-                                                "metric": "container_memory_usage_bytes",
                                                 "range": true,
                                                 "step": 240
                                             },
@@ -705,7 +933,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
-                                    "unit": "percent",
+                                    "unit": "percentunit",
                                     "mappings": [
                                         {
                                             "type": "special",
@@ -733,8 +961,7 @@
                                 "overrides": []
                             }
                         }
-                    },
-                    "transparent": true
+                    }
                 }
             },
             "panel-7": {
@@ -758,12 +985,11 @@
                                             "spec": {
                                                 "editorMode": "builder",
                                                 "exemplar": false,
-                                                "expr": "count(container_last_seen{instance=~\"$instance\"})",
+                                                "expr": "count(container_last_seen{instance=~\"$instance\", name!=\"\"})",
                                                 "instant": true,
                                                 "interval": "",
                                                 "intervalFactor": 2,
                                                 "legendFormat": "",
-                                                "metric": "container_last_seen",
                                                 "step": 240
                                             },
                                             "labels": {
@@ -833,8 +1059,7 @@
                                 "overrides": []
                             }
                         }
-                    },
-                    "transparent": true
+                    }
                 }
             },
             "panel-8": {
@@ -858,11 +1083,10 @@
                                             "spec": {
                                                 "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "sum by (container) (rate(container_fs_reads_bytes_total{instance=~\"$instance\",name=~\"$container\"}[$__rate_interval]))",
+                                                "expr": "sum by (name) (rate(container_fs_reads_bytes_total{instance=~\"$instance\",name=~\"$container\", name!=\"\"}[$__rate_interval]))",
                                                 "interval": "",
                                                 "intervalFactor": 1,
-                                                "legendFormat": "read {{container}}",
-                                                "metric": "container_fs_reads_bytes_total",
+                                                "legendFormat": "read {{name}}",
                                                 "range": true,
                                                 "step": 20
                                             },
@@ -884,10 +1108,10 @@
                                             "spec": {
                                                 "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "-(sum by (container) (rate(container_fs_writes_bytes_total{instance=~\"$instance\",name=~\"$container\"}[$__rate_interval])))",
+                                                "expr": "-(sum by (name) (rate(container_fs_writes_bytes_total{instance=~\"$instance\",name=~\"$container\", name!=\"\"}[$__rate_interval])))",
                                                 "interval": "",
                                                 "intervalFactor": 1,
-                                                "legendFormat": "write {{container}}",
+                                                "legendFormat": "write {{name}}",
                                                 "range": true
                                             },
                                             "labels": {
@@ -989,7 +1213,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 9,
-                    "title": "Total Memory",
+                    "title": "Total Server Memory",
                     "description": "",
                     "links": [],
                     "data": {
@@ -1004,13 +1228,12 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
+                                                "editorMode": "code",
                                                 "exemplar": true,
-                                                "expr": "sum(machine_memory_bytes{instance=~\"$instance\"} / 1024) / 1024",
+                                                "expr": "sum(machine_memory_bytes{instance=~\"$instance\"})",
                                                 "interval": "",
                                                 "intervalFactor": 2,
                                                 "legendFormat": "",
-                                                "metric": "container_memory_usage_bytes",
                                                 "range": true,
                                                 "step": 240
                                             },
@@ -1053,7 +1276,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
-                                    "unit": "mbytes",
+                                    "unit": "bytes",
                                     "mappings": [
                                         {
                                             "type": "special",
@@ -1081,8 +1304,7 @@
                                 "overrides": []
                             }
                         }
-                    },
-                    "transparent": true
+                    }
                 }
             }
         },
@@ -1121,7 +1343,7 @@
                         "spec": {
                             "x": 9,
                             "y": 0,
-                            "width": 5,
+                            "width": 4,
                             "height": 3,
                             "element": {
                                 "kind": "ElementReference",
@@ -1132,9 +1354,9 @@
                     {
                         "kind": "GridLayoutItem",
                         "spec": {
-                            "x": 14,
+                            "x": 13,
                             "y": 0,
-                            "width": 5,
+                            "width": 4,
                             "height": 3,
                             "element": {
                                 "kind": "ElementReference",
@@ -1145,13 +1367,13 @@
                     {
                         "kind": "GridLayoutItem",
                         "spec": {
-                            "x": 19,
+                            "x": 17,
                             "y": 0,
-                            "width": 5,
+                            "width": 3,
                             "height": 3,
                             "element": {
                                 "kind": "ElementReference",
-                                "name": "panel-10"
+                                "name": "panel-18"
                             }
                         }
                     },
@@ -1187,6 +1409,19 @@
                             "x": 0,
                             "y": 17,
                             "width": 24,
+                            "height": 6,
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-14"
+                            }
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "x": 0,
+                            "y": 23,
+                            "width": 24,
                             "height": 7,
                             "element": {
                                 "kind": "ElementReference",
@@ -1198,7 +1433,7 @@
                         "kind": "GridLayoutItem",
                         "spec": {
                             "x": 0,
-                            "y": 24,
+                            "y": 30,
                             "width": 24,
                             "height": 7,
                             "element": {
@@ -1206,24 +1441,24 @@
                                 "name": "panel-8"
                             }
                         }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "x": 0,
+                            "y": 37,
+                            "width": 24,
+                            "height": 8,
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-17"
+                            }
+                        }
                     }
                 ]
             }
         },
-        "links": [
-            {
-                "title": "Grafana",
-                "type": "link",
-                "icon": "external link",
-                "tooltip": "",
-                "url": "https://grafana.com/grafana/dashboards/15798",
-                "tags": [],
-                "asDropdown": false,
-                "targetBlank": true,
-                "includeVars": false,
-                "keepTime": false
-            }
-        ],
+        "links": [],
         "liveNow": false,
         "preload": false,
         "tags": [
@@ -1251,7 +1486,7 @@
             "hideTimepicker": false,
             "fiscalYearStartMonth": 0
         },
-        "title": "Docker monitoring",
+        "title": "Docker Monitoring",
         "variables": [
             {
                 "kind": "QueryVariable",
@@ -1263,7 +1498,7 @@
                     },
                     "label": "Instance",
                     "hide": "dontHide",
-                    "refresh": "onTimeRangeChanged",
+                    "refresh": "onDashboardLoad",
                     "skipUrlSync": false,
                     "query": {
                         "kind": "DataQuery",
@@ -1271,7 +1506,7 @@
                         "version": "v0",
                         "spec": {
                             "qryType": 1,
-                            "query": "label_values(container_memory_usage_bytes,instance)",
+                            "query": "label_values(machine_memory_bytes,instance)",
                             "refId": "PrometheusVariableQueryEditor-VariableQuery"
                         },
                         "labels": {
@@ -1281,7 +1516,7 @@
                     "regex": "",
                     "regexApplyTo": "value",
                     "sort": "alphabeticalAsc",
-                    "definition": "label_values(container_memory_usage_bytes,instance)",
+                    "definition": "label_values(machine_memory_bytes,instance)",
                     "options": [],
                     "multi": false,
                     "includeAll": false,
@@ -1307,7 +1542,7 @@
                         "version": "v0",
                         "spec": {
                             "qryType": 1,
-                            "query": "label_values(container_memory_usage_bytes{instance=~\"$instance\"},name)",
+                            "query": "label_values(container_memory_working_set_bytes{instance=~\"$instance\", name!=\"\"},name)",
                             "refId": "PrometheusVariableQueryEditor-VariableQuery"
                         },
                         "labels": {
@@ -1317,10 +1552,11 @@
                     "regex": "",
                     "regexApplyTo": "value",
                     "sort": "alphabeticalAsc",
-                    "definition": "label_values(container_memory_usage_bytes{instance=~\"$instance\"},name)",
+                    "definition": "label_values(container_memory_working_set_bytes{instance=~\"$instance\", name!=\"\"},name)",
                     "options": [],
                     "multi": false,
                     "includeAll": true,
+                    "allValue": ".*",
                     "allowCustomValue": false
                 }
             }
