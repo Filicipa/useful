@@ -2,6 +2,7 @@ services:
   postgres_exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     container_name: postgres_exporter
+    restart: unless-stopped
     ports:
       - "9187:9187"
     environment:
