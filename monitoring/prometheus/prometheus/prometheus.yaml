@@ -25,12 +25,21 @@ scrape_configs:
       - files:
           - "exporters/*.json"
 
-  - job_name: "stage-backend-mainnet_cadvisor"
-    scrape_interval: 5s
-    static_configs:
-      - targets: ["10.114.0.3:9100"]
-        labels:
-          instance: "stage-backend-mainnet"
+  # ==========================================
+  # cAdvisor Metrics
+  # ==========================================
+  - job_name: "cadvisor"
+    file_sd_configs:
+      - files:
+          - targets/cadvisor.yaml
+
+  # ==========================================
+  # Node Exporter Metrics
+  # ==========================================
+  - job_name: "node-exporter"
+    file_sd_configs:
+      - files:
+          - targets/node_exporter.yaml
 
   - job_name: "nats-prod"
     scrape_interval: 15s
@@ -39,25 +48,19 @@ scrape_configs:
         labels:
           instance: "nats-prod"
 
-  - job_name: "blackbox_exporter"
-    static_configs:
-      - targets: ["blackbox:9115"]
-
-  - job_name: "blackbox"
-    scrape_timeout: 25s
-    scrape_interval: 30s
+  - job_name: "blackbox_ping"
     metrics_path: /probe
     params:
       module:
         - http_2xx
     file_sd_configs:
       - files:
-          - blackbox_targets.yaml
+          - /targets/blackbox.yaml
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
-      - source_labels: [__param_target]
-        target_label: instance
+      - source_labels: [__param_target] # remove for Dashboard https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/
+        target_label: instance # remove for Dashboard https://grafana.com/grafana/dashboards/13659-blackbox-exporter-http-prober/
       - target_label: __address__
         replacement: blackbox:9115
 

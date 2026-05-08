@@ -1,0 +1,15 @@
+- targets: ["192.168.43.153:9100"]
+  labels:
+    instance: "compound-integration-kit-stage"
+
+- targets: ["192.168.46.111:9100"]
+  labels:
+    instance: "compound-integration-kit-dev"
+
+- targets: ["192.168.37.73:9100"]
+  labels:
+    instance: "compound-price-feed-dev"
+
+- targets: ["18.199.186.249:9100"]
+  labels:
+    instance: "compound-reserve-growth-backend-dev"

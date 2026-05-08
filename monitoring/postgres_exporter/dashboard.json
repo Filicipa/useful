@@ -3,7 +3,7 @@
     "kind": "Dashboard",
     "metadata": {
         "name": "adlmqxw",
-        "generation": 5,
+        "generation": 7,
         "creationTimestamp": "2026-05-07T13:26:29Z",
         "labels": {},
         "annotations": {}
@@ -1391,7 +1391,9 @@
         "links": [],
         "liveNow": false,
         "preload": false,
-        "tags": [],
+        "tags": [
+            "postgres"
+        ],
         "timeSettings": {
             "timezone": "browser",
             "from": "now-1h",
@@ -1432,7 +1434,7 @@
                         "version": "v0",
                         "spec": {
                             "qryType": 1,
-                            "query": "label_values(instance)",
+                            "query": "label_values(pg_settings_hot_standby,instance)",
                             "refId": "PrometheusVariableQueryEditor-VariableQuery"
                         },
                         "labels": {
@@ -1442,7 +1444,7 @@
                     "regex": "",
                     "regexApplyTo": "value",
                     "sort": "disabled",
-                    "definition": "label_values(instance)",
+                    "definition": "label_values(pg_settings_hot_standby,instance)",
                     "options": [],
                     "multi": false,
                     "includeAll": false,

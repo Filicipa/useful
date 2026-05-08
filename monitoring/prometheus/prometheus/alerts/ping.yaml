@@ -3,11 +3,11 @@ groups:
     rules:
       - alert: Service Access
         expr: probe_success == 0
-        for: 10s
+        for: 2m
         labels:
           severity: Critical
-          instance: "{{ $labels.instance }}"
-          service: "{{ $labels.service }}"
+          # instance: "{{ $labels.instance }}"
+          # service: "{{ $labels.service }}"
         annotations:
           summary: "Service access failure"
-          description: "Service {{ $labels.service }} on {{ $labels.instance }} is unreachable."
+          description: "Target {{ $labels.instance }} is unreachable."

@@ -4,17 +4,14 @@ services:
     container_name: alertmanager
     volumes:
       - ./alertmanager_data:/alertmanager
-      - ./alertmanager/:/config
+      - ./alertmanager.yaml:/config/alertmanager.yaml
     command:
-      - '--config.file=/config/alertmanager.yaml'
-      - '--storage.path=/alertmanager'
-      - '--web.external-url=http://localhost:9093/'
+      - "--config.file=/config/alertmanager.yaml"
+      - "--storage.path=/alertmanager"
+      - "--web.external-url=http://localhost:9093/"
       # - '--log.level=debug'
     restart: unless-stopped
     ports:
       - "9093:9093"
     networks:
       - monitoring
-    labels:
-      group: "monitoring"
-      host.name: "${HOST_NAME}"
