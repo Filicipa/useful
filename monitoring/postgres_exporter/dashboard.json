@@ -3,7 +3,7 @@
     "kind": "Dashboard",
     "metadata": {
         "name": "adlmqxw",
-        "generation": 7,
+        "generation": 1,
         "creationTimestamp": "2026-05-07T13:26:29Z",
         "labels": {},
         "annotations": {}
@@ -170,7 +170,7 @@
                                             "spec": {
                                                 "editorMode": "builder",
                                                 "expr": "sum(rate(pg_stat_database_xact_commit{instance=\"$instance\", datname=\"$db_name\"}[5m]))",
-                                                "legendFormat": "__auto",
+                                                "legendFormat": "RPS",
                                                 "range": true
                                             },
                                             "labels": {
@@ -289,7 +289,7 @@
                                             "spec": {
                                                 "editorMode": "builder",
                                                 "expr": "sum(pg_stat_user_tables_n_dead_tup{instance=\"$instance\", datname=\"$db_name\"})",
-                                                "legendFormat": "__auto",
+                                                "legendFormat": "Dead Tuples",
                                                 "range": true
                                             },
                                             "labels": {
@@ -408,7 +408,7 @@
                                             "spec": {
                                                 "editorMode": "code",
                                                 "expr": "sum(rate(pg_stat_database_blks_hit{instance=\"$instance\", datname=\"$db_name\"}[5m]))\n/\n(\n  sum(rate(pg_stat_database_blks_hit{instance=\"$instance\", datname=\"$db_name\"}[5m])) \n  + \n  sum(rate(pg_stat_database_blks_read{instance=\"$instance\", datname=\"$db_name\"}[5m]))\n)",
-                                                "legendFormat": "__auto",
+                                                "legendFormat": "Percent",
                                                 "range": true
                                             },
                                             "labels": {
