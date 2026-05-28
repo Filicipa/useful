@@ -3,7 +3,7 @@
     "kind": "Dashboard",
     "metadata": {
         "name": "adlmqxw",
-        "generation": 1,
+        "generation": 10,
         "creationTimestamp": "2026-05-07T13:26:29Z",
         "labels": {},
         "annotations": {}
@@ -34,7 +34,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 1,
-                    "title": "Топ-10 самых тяжелых запросов (Total Time)",
+                    "title": "Top 10 Queries by Total Time",
                     "description": "",
                     "links": [],
                     "data": {
@@ -153,7 +153,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 10,
-                    "title": "Общий RPS базы данных (Успешные транзакции)",
+                    "title": "Database Commits (RPS)",
                     "description": "",
                     "links": [],
                     "data": {
@@ -272,7 +272,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 12,
-                    "title": "Мертвые строки в таблицах (Dead Tuples)",
+                    "title": "Dead Tuples Count (Table Bloat)",
                     "description": "",
                     "links": [],
                     "data": {
@@ -391,7 +391,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 13,
-                    "title": "Эффективность кэша (Cache Hit Ratio)",
+                    "title": "Cache Hit Ratio",
                     "description": "",
                     "links": [],
                     "data": {
@@ -510,7 +510,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 3,
-                    "title": "Среднее время выполнения запроса (Latency)",
+                    "title": "Average Query Latency",
                     "description": "",
                     "links": [],
                     "data": {
@@ -629,7 +629,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 4,
-                    "title": "Время ожидания диска (I/O Block Read Time)",
+                    "title": "Top 10 Queries by I/O Wait Time",
                     "description": "",
                     "links": [],
                     "data": {
@@ -748,7 +748,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 5,
-                    "title": "Активные подключения к БД (Connections)",
+                    "title": "Active Database Connections",
                     "description": "",
                     "links": [],
                     "data": {
@@ -805,6 +805,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
+                                    "unit": "none",
                                     "thresholds": {
                                         "mode": "absolute",
                                         "steps": [
@@ -832,7 +833,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 6,
-                    "title": "Зависшие и долгие транзакции (Max TX Duration)",
+                    "title": "Max Transaction Duration (Stuck/Long-Running)",
                     "description": "",
                     "links": [],
                     "data": {
@@ -847,8 +848,97 @@
                                             "group": "prometheus",
                                             "version": "v0",
                                             "spec": {
-                                                "editorMode": "builder",
+                                                "editorMode": "code",
                                                 "expr": "max by(state) (pg_stat_activity_max_tx_duration{instance=\"$instance\", datname=\"$db_name\", state=~\"active|idle in transaction\"})",
+                                                "legendFormat": "{{state}}",
+                                                "range": true
+                                            },
+                                            "labels": {
+                                                "grafana.app/export-label": "prometheus-1"
+                                            }
+                                        },
+                                        "refId": "A",
+                                        "hidden": false
+                                    }
+                                }
+                            ],
+                            "transformations": [],
+                            "queryOptions": {}
+                        }
+                    },
+                    "vizConfig": {
+                        "kind": "VizConfig",
+                        "group": "stat",
+                        "version": "13.0.1",
+                        "spec": {
+                            "options": {
+                                "colorMode": "background",
+                                "graphMode": "none",
+                                "justifyMode": "auto",
+                                "orientation": "vertical",
+                                "percentChangeColorMode": "standard",
+                                "reduceOptions": {
+                                    "calcs": [
+                                        "lastNotNull"
+                                    ],
+                                    "fields": "",
+                                    "values": false
+                                },
+                                "showPercentChange": false,
+                                "textMode": "auto",
+                                "wideLayout": true
+                            },
+                            "fieldConfig": {
+                                "defaults": {
+                                    "unit": "s",
+                                    "thresholds": {
+                                        "mode": "absolute",
+                                        "steps": [
+                                            {
+                                                "value": 0,
+                                                "color": "green"
+                                            },
+                                            {
+                                                "value": 10,
+                                                "color": "#EAB839"
+                                            },
+                                            {
+                                                "value": 30,
+                                                "color": "red"
+                                            }
+                                        ]
+                                    },
+                                    "color": {
+                                        "mode": "thresholds"
+                                    }
+                                },
+                                "overrides": []
+                            }
+                        }
+                    }
+                }
+            },
+            "panel-7": {
+                "kind": "Panel",
+                "spec": {
+                    "id": 7,
+                    "title": "Database Sessions by State",
+                    "description": "",
+                    "links": [],
+                    "data": {
+                        "kind": "QueryGroup",
+                        "spec": {
+                            "queries": [
+                                {
+                                    "kind": "PanelQuery",
+                                    "spec": {
+                                        "query": {
+                                            "kind": "DataQuery",
+                                            "group": "prometheus",
+                                            "version": "v0",
+                                            "spec": {
+                                                "editorMode": "code",
+                                                "expr": "sum by (state) (pg_stat_activity_count{instance=\"$instance\", datname=\"$db_name\"})",
                                                 "legendFormat": "{{state}}",
                                                 "range": true
                                             },
@@ -889,7 +979,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
-                                    "unit": "s",
+                                    "unit": "none",
                                     "thresholds": {
                                         "mode": "absolute",
                                         "steps": [
@@ -915,7 +1005,7 @@
                                         "barAlignment": 0,
                                         "barWidthFactor": 0.6,
                                         "drawStyle": "line",
-                                        "fillOpacity": 0,
+                                        "fillOpacity": 30,
                                         "gradientMode": "none",
                                         "hideFrom": {
                                             "legend": false,
@@ -924,9 +1014,6 @@
                                         },
                                         "insertNulls": false,
                                         "lineInterpolation": "linear",
-                                        "lineStyle": {
-                                            "fill": "solid"
-                                        },
                                         "lineWidth": 1,
                                         "pointSize": 5,
                                         "scaleDistribution": {
@@ -937,7 +1024,7 @@
                                         "spanNulls": false,
                                         "stacking": {
                                             "group": "A",
-                                            "mode": "none"
+                                            "mode": "normal"
                                         },
                                         "thresholdsStyle": {
                                             "mode": "off"
@@ -950,95 +1037,11 @@
                     }
                 }
             },
-            "panel-7": {
-                "kind": "Panel",
-                "spec": {
-                    "id": 7,
-                    "title": "Активность сессий (Activity Count)",
-                    "description": "",
-                    "links": [],
-                    "data": {
-                        "kind": "QueryGroup",
-                        "spec": {
-                            "queries": [
-                                {
-                                    "kind": "PanelQuery",
-                                    "spec": {
-                                        "query": {
-                                            "kind": "DataQuery",
-                                            "group": "prometheus",
-                                            "version": "v0",
-                                            "spec": {
-                                                "editorMode": "code",
-                                                "expr": "sum(pg_stat_activity_count{instance=\"$instance\", datname=\"$db_name\"})",
-                                                "legendFormat": "__auto",
-                                                "range": true
-                                            },
-                                            "labels": {
-                                                "grafana.app/export-label": "prometheus-1"
-                                            }
-                                        },
-                                        "refId": "A",
-                                        "hidden": false
-                                    }
-                                }
-                            ],
-                            "transformations": [],
-                            "queryOptions": {}
-                        }
-                    },
-                    "vizConfig": {
-                        "kind": "VizConfig",
-                        "group": "stat",
-                        "version": "13.0.1",
-                        "spec": {
-                            "options": {
-                                "colorMode": "background",
-                                "graphMode": "none",
-                                "justifyMode": "auto",
-                                "orientation": "auto",
-                                "percentChangeColorMode": "standard",
-                                "reduceOptions": {
-                                    "calcs": [
-                                        "lastNotNull"
-                                    ],
-                                    "fields": "",
-                                    "values": false
-                                },
-                                "showPercentChange": false,
-                                "textMode": "auto",
-                                "wideLayout": true
-                            },
-                            "fieldConfig": {
-                                "defaults": {
-                                    "thresholds": {
-                                        "mode": "absolute",
-                                        "steps": [
-                                            {
-                                                "value": 0,
-                                                "color": "green"
-                                            },
-                                            {
-                                                "value": 80,
-                                                "color": "red"
-                                            }
-                                        ]
-                                    },
-                                    "color": {
-                                        "mode": "palette-classic"
-                                    }
-                                },
-                                "overrides": []
-                            }
-                        }
-                    }
-                }
-            },
             "panel-8": {
                 "kind": "Panel",
                 "spec": {
                     "id": 8,
-                    "title": "Общее количество блокировок (Locks Count)",
+                    "title": "Active Locks Count",
                     "description": "",
                     "links": [],
                     "data": {
@@ -1095,6 +1098,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
+                                    "unit": "none",
                                     "thresholds": {
                                         "mode": "absolute",
                                         "steps": [
@@ -1122,7 +1126,7 @@
                 "kind": "Panel",
                 "spec": {
                     "id": 9,
-                    "title": "Топ-10 частых запросов (по количеству вызовов)",
+                    "title": "Top 10 Queries by Call Count",
                     "description": "",
                     "links": [],
                     "data": {
@@ -1179,7 +1183,7 @@
                             },
                             "fieldConfig": {
                                 "defaults": {
-                                    "unit": "none",
+                                    "unit": "reqps",
                                     "thresholds": {
                                         "mode": "absolute",
                                         "steps": [
@@ -1247,8 +1251,8 @@
                         "spec": {
                             "x": 0,
                             "y": 0,
-                            "width": 6,
-                            "height": 6,
+                            "width": 4,
+                            "height": 4,
                             "element": {
                                 "kind": "ElementReference",
                                 "name": "panel-5"
@@ -1258,10 +1262,10 @@
                     {
                         "kind": "GridLayoutItem",
                         "spec": {
-                            "x": 6,
+                            "x": 4,
                             "y": 0,
-                            "width": 5,
-                            "height": 6,
+                            "width": 13,
+                            "height": 8,
                             "element": {
                                 "kind": "ElementReference",
                                 "name": "panel-7"
@@ -1271,10 +1275,23 @@
                     {
                         "kind": "GridLayoutItem",
                         "spec": {
-                            "x": 11,
+                            "x": 17,
                             "y": 0,
-                            "width": 6,
-                            "height": 6,
+                            "width": 7,
+                            "height": 8,
+                            "element": {
+                                "kind": "ElementReference",
+                                "name": "panel-6"
+                            }
+                        }
+                    },
+                    {
+                        "kind": "GridLayoutItem",
+                        "spec": {
+                            "x": 0,
+                            "y": 4,
+                            "width": 4,
+                            "height": 4,
                             "element": {
                                 "kind": "ElementReference",
                                 "name": "panel-8"
@@ -1285,7 +1302,7 @@
                         "kind": "GridLayoutItem",
                         "spec": {
                             "x": 0,
-                            "y": 6,
+                            "y": 8,
                             "width": 24,
                             "height": 12,
                             "element": {
@@ -1298,7 +1315,7 @@
                         "kind": "GridLayoutItem",
                         "spec": {
                             "x": 0,
-                            "y": 18,
+                            "y": 20,
                             "width": 24,
                             "height": 10,
                             "element": {
@@ -1311,9 +1328,9 @@
                         "kind": "GridLayoutItem",
                         "spec": {
                             "x": 0,
-                            "y": 28,
+                            "y": 30,
                             "width": 24,
-                            "height": 12,
+                            "height": 10,
                             "element": {
                                 "kind": "ElementReference",
                                 "name": "panel-1"
@@ -1339,7 +1356,7 @@
                             "x": 0,
                             "y": 50,
                             "width": 24,
-                            "height": 13,
+                            "height": 10,
                             "element": {
                                 "kind": "ElementReference",
                                 "name": "panel-4"
@@ -1350,20 +1367,7 @@
                         "kind": "GridLayoutItem",
                         "spec": {
                             "x": 0,
-                            "y": 63,
-                            "width": 24,
-                            "height": 9,
-                            "element": {
-                                "kind": "ElementReference",
-                                "name": "panel-6"
-                            }
-                        }
-                    },
-                    {
-                        "kind": "GridLayoutItem",
-                        "spec": {
-                            "x": 0,
-                            "y": 72,
+                            "y": 60,
                             "width": 24,
                             "height": 9,
                             "element": {
@@ -1376,7 +1380,7 @@
                         "kind": "GridLayoutItem",
                         "spec": {
                             "x": 0,
-                            "y": 81,
+                            "y": 69,
                             "width": 24,
                             "height": 8,
                             "element": {

@@ -1,8 +1,6 @@
 # Grafana dashboard id 22870
 {
-        servers {
-                metrics
-        }
+         metrics
 #        debug
 }
 
