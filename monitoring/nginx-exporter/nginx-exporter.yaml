@@ -1,0 +1,17 @@
+services:
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: nginx-exporter
+    restart: unless-stopped
+    environment:
+      - SCRAPE_URI=http://192.168.18.8:9099/nginx_status
+      - TELEMETRY_PATH=/metrics
+      - NGINX_RETRIES=10
+    ports:
+      - 9113:9113
+    networks:
+      - monitoring
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"

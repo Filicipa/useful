@@ -1,0 +1,15 @@
+services:
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    command: --config.file=/config/promtail.yaml
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail.yaml:/config/promtail.yaml
+      - ./data:/data/promtail
+      - /var/log/nginx/access.log:/nginx/access.log:ro
+    ports:
+      - 9080:9080
+    networks:
+      - monitoring

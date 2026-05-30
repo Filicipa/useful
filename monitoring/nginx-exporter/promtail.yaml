@@ -1,0 +1,34 @@
+- job_name: nginx_access_log
+  static_configs:
+    - targets:
+        - localhost
+      labels:
+        job: nginx
+        instance: poker-dev # Чтобы совпадало с другими твоими метриками
+        __path__: /nginx/access.log
+
+  pipeline_stages:
+    # 1. Парсим нашу новую строку лога (разбираем на переменные)
+    - regex:
+        expression: '^(?P<ip>[^ ]+) \- (?P<user>[^ ]+) \[(?P<timestamp>[^\]]+)\] "(?P<method>\S+)\s?(?P<path>[^ ]+)?\s?(?P<protocol>[^"]+)?" (?P<status>\d{3}) (?P<bytes>\d+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)" rt=(?P<request_time>[\d\.]+)'
+    # 2. Вытаскиваем метод и статус-код в качестве лейблов (чтобы фильтровать в Графане)
+    - labels:
+        method:
+        status:
+    # 3. Создаем сами метрики!
+    - metrics:
+        # Счетчик ответов
+        nginx_http_responses_total:
+          type: Counter
+          description: "Total Nginx requests by status code"
+          source: status
+          config:
+            action: inc
+        # Гистограмма времени выполнения (в секундах)
+        nginx_http_response_time_seconds:
+          type: Histogram
+          description: "Nginx response time in seconds"
+          source: request_time
+          config:
+            # Разделители по времени (бакеты). От 10 мс до 10 секунд
+            buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]
