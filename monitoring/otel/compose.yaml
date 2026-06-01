@@ -10,7 +10,7 @@ services:
     image: otel/opentelemetry-collector:0.144.0
     container_name: otel-collector
     volumes:
-      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml
+      - ./otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
     ports:
       - 1888:1888 # pprof
       - 8888:8888 # metrics exposed by the collector

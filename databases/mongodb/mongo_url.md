@@ -1,0 +1,3 @@
+```
+mongodb://admin:mypassword@example.com:27017/test_db?authSource=admin
+```

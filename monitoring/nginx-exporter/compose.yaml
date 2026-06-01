@@ -5,8 +5,8 @@ services:
     command: --config.file=/config/promtail.yaml
     restart: unless-stopped
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./promtail.yaml:/config/promtail.yaml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail.yaml:/config/promtail.yaml:ro
       - ./data:/data/promtail
       - /var/log/nginx/access.log:/nginx/access.log:ro
     ports:

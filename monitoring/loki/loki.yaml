@@ -48,7 +48,7 @@ storage_config:
 compactor:
   working_directory: /loki/compaction
   retention_enabled: true
-  retention_delete_delay: 1h
+  retention_delete_delay: 2h
   delete_request_store: filesystem
   compaction_interval: 10m
 

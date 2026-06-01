@@ -1,7 +1,6 @@
 FROM node:22.20.0-alpine AS build
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install glob rimraf
 RUN npm ci
 COPY ./ ./
 RUN npm run build ${SERVICE_NAME}

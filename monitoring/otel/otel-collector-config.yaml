@@ -7,34 +7,69 @@ receivers:
         endpoint: "0.0.0.0:4318"
 
 processors:
-  batch:
   memory_limiter:
+    check_interval: 1s
     limit_mib: 256
     spike_limit_mib: 64
-    check_interval: 5s
+  filter/drop_healthchecks:
+    error_mode: ignore
+    traces:
+      span:
+        # Дропаем по имени спана (например, если это имя HTTP метода и пути)
+        - 'name == "GET /ping"'
+        - 'name == "GET /health"'
+        # Или дропаем по значению конкретного атрибута HTTP-запроса
+        - 'attributes["http.target"] == "/metrics"'
+  #########################################################
+  # 2. Умное сэмплирование (Tail Sampling)
+  tail_sampling:
+    decision_wait: 10s # Ждем 10 секунд после появления первого спана, чтобы собрался весь трейс
+    num_traces: 10000 # Размер внутреннего кэша для отслеживания трейсов
+    expected_new_traces_per_sec: 2000
+    policies:
+      # Правило А: Если в трейсе есть хотя бы один спан со статусом ERROR — сохраняем весь трейс (100%)
+      - name: keep_errors_policy
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+
+      # Правило Б: Из всех остальных (успешных) трейсов сохраняем только 5%, остальное дропаем
+      - name: probabilistic_sample_policy
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 5.0
+  ########################################################
+  batch:
+    timeout: 1s
 
 exporters:
   otlp/tempo:
-    endpoint: http://192.168.17.187:4317
+    endpoint: 192.168.17.187:4317
     tls:
       insecure: true
 
   prometheus:
     endpoint: "0.0.0.0:8889"
 
-  debug: {}
+  debug:
+    verbosity: detailed
 
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
 
 service:
+  extensions: [health_check]
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch, memory_limiter]
+      # КРИТИЧЕСКИ ВАЖЕН ПОРЯДОК:
+      # memory_limiter защищает -> tail_sampling фильтрует -> batch упаковывает
+      processors: [memory_limiter, batch]
       exporters: [otlp/tempo, debug]
+
+    # Пайплайн для метрик (тут сэмплирование не нужно, оставляем стандартный набор)
     metrics:
       receivers: [otlp]
-      processors: [batch, memory_limiter]
-      exporters: [prometheus]
+      processors: [memory_limiter, batch]
+      exporters: [prometheus, debug]

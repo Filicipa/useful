@@ -1,25 +1,51 @@
-FROM php:7.4-fpm
+FROM php:8.4-fpm AS build
 
-# Install necessary packages, extensions
-RUN apt-get update \
-    && curl -sL https://deb.nodesource.com/setup_15.x | bash - \
-    && apt-get install -y unzip libxslt1-dev nodejs supervisor nginx \
-    && docker-php-ext-configure intl \
-    && docker-php-ext-install pdo_mysql exif xsl bcmath intl mbstring pcntl bcmath gd zip \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install \
+    --no-install-recommends -y \
+    git \
+    unzip \
+    zip \
+    libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    nodejs \
+    npm && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install zip mysqli pdo pdo_mysql gd && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install composer from official image
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
-# Set working directory
-WORKDIR /var/www/backend
-RUN chown -R www-data:www-data /var/www/backend
-COPY ./supervisord.conf /supervisor/supervisord.conf
-COPY ./default.conf /etc/nginx/conf.d/default.conf
-RUN composer install
-# Expose port
+WORKDIR /var/www/html/
+
+COPY composer.json composer.lock package.json package-lock.json ./
+RUN composer install --no-dev --no-scripts --no-autoloader && npm ci
+COPY ./ ./ 
+RUN composer dump-autoload --optimize && \
+    npm run build
+
+FROM php:8.4-fpm-alpine AS run
+# COPY ./nginx/php.ini /usr/local/etc/php/php.ini
+RUN apk add --no-cache \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    supervisor \
+    nginx curl tzdata && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install mysqli pdo pdo_mysql gd
+
+WORKDIR /var/www/html/
+
+COPY --from=build /var/www/html/ /var/www/html/
+COPY ./entrypoint.sh /entrypoint.sh
+COPY ./nginx/default.conf /etc/nginx/http.d/default.conf
+COPY ./nginx/supervisord.conf /supervisor/supervisord.conf
+RUN chown -R www-data:www-data /var/www/html
+
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
-
-# Start PHP-FPM
-CMD ["supervisord", "-c", "/supervisor/supervisord.conf"]
+ENTRYPOINT ["/entrypoint.sh"]

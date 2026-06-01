@@ -1,50 +1,54 @@
-FROM php:8.2-fpm AS build
+FROM php:8.4-fpm AS build
+
 RUN apt-get update && apt-get install \
     --no-install-recommends -y \
     git \
     unzip \
     zip \
     libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
     nodejs \
     npm && \
-    docker-php-ext-install zip mysqli pdo pdo_mysql && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install zip mysqli pdo pdo_mysql gd && \
     rm -rf /var/lib/apt/lists/*
 
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
-    php composer-setup.php --install-dir=/usr/local/bin --filename=composer && \
-    php -r "unlink('composer-setup.php');"
-
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 WORKDIR /var/www/html/
-COPY ./ ./ 
-RUN composer install && \
-    apt-get update  && \
-    apt-get install --no-install-recommends -y nodejs npm unzip && \
-    npm ci && npm run build && \
-    php artisan cache:clear && \
-    php artisan config:cache && \
-    php artisan view:cache && \
-    # php artisan route:cache && \
-    rm -rf /var/lib/apt/lists/*
 
-FROM php:8.2-fpm-alpine AS run
-RUN docker-php-ext-install mysqli pdo pdo_mysql
-RUN apk update && \
-    apk add --no-cache \
-    nginx curl && \
-    rm -rf /var/lib/apt/lists/*
+COPY composer.json composer.lock package.json package-lock.json ./
+RUN composer install --no-dev --no-scripts --no-autoloader && npm ci
+COPY ./ ./ 
+RUN composer dump-autoload --optimize && \
+    npm run build
+
+FROM php:8.4-fpm-alpine AS run
+# COPY ./nginx/php.ini /usr/local/etc/php/php.ini
+RUN apk add --no-cache \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    supervisor \
+    nginx curl tzdata && \
+    docker-php-ext-configure gd --with-freetype --with-jpeg && \
+    docker-php-ext-install mysqli pdo pdo_mysql gd
+
 WORKDIR /var/www/html/
 
 COPY --from=build /var/www/html/ /var/www/html/
+COPY ./entrypoint.sh /entrypoint.sh
 COPY ./nginx/default.conf /etc/nginx/http.d/default.conf
-RUN rm -R node_modules && \
-    chown -R www-data:www-data /var/www/html
+COPY ./nginx/supervisord.conf /supervisor/supervisord.conf
+RUN chown -R www-data:www-data /var/www/html
+
+RUN chmod +x /entrypoint.sh
 
 EXPOSE 80
-
-RUN chmod +x start_nginx.sh
-ENTRYPOINT ["/var/www/html/start_nginx.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 ###
 #!/bin/sh

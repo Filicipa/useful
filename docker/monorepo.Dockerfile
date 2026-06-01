@@ -18,4 +18,4 @@ COPY --from=build /app/dist ./dist
 
 EXPOSE 8080
 ENV EXECUTION_FILE=dist/apps/$SERVICE_NAME/apps/$SERVICE_NAME/src/main
-CMD npm run migrations:prod && node ${EXECUTION_FILE}
+CMD node ${EXECUTION_FILE}

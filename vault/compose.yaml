@@ -2,14 +2,15 @@ services:
   vault:
     image: hashicorp/vault:1.21
     container_name: vault-server
+    restart: unless-stopped
     environment:
-      - VAULT_API_ADDR=http://0.0.0.0:8200
+      - VAULT_ADDR=http://127.0.0.1:8200 # Добавлено для удобства работы CLI внутри контейнера
+      - VAULT_API_ADDR=http://127.0.0.1:8200 # Указать адрес по которому обращаются
     ports:
       - "8200:8200"
     cap_add:
       - IPC_LOCK
     volumes:
-      - ./vault_config:/vault/config
+      - ./vault_config:/vault/config:ro
       - ./vault_data:/vault/data
-    entrypoint: vault server -config=/vault/config/local.json
-    restart: always
+    command: server -config=/vault/config/local.json

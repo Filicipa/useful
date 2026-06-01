@@ -1,6 +1,6 @@
 {
-  "disable_mlock": "true",
-  "ui": "true",
+  "ui": true,
+  "disable_mlock": false,
   "max_lease_ttl": "10h",
   "default_lease_ttl": "10h",
   "listener": [

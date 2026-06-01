@@ -1,4 +1,4 @@
-## Dump MySQL
+# Dump MySQL
 `mysqldump -h <db_host> -u <db_user> -p <db_name> > <dump_name>.sql`
 
 ### For cloud managment DB
@@ -28,3 +28,11 @@ You can also ignore the errors by using the `-f` option to load the rest of the 
 
 ## Restore
 `mysql <REPLACE_DB_NAME> -u <REPLACE_DB_USER> -h <DB_HOST_HERE> -p < dumpfile.sql`
+
+## Docker
+```
+docker exec -i mysql mysqldump -uroot -p"example" decimated --single-transaction --set-gtid-purged=OFF > mysql_dump_$(date +%Y-%m-%d_%H_%M_%S).sql
+```
+```
+cat mysql_dump.sql | docker exec -i mysql mysql -uroot -p"example" decimated
+```

@@ -3,7 +3,7 @@ services:
     image: clickhouse/clickhouse-server:25.7.4
     container_name: clickhouse
     ports:
-     - 8123:8123
+      - 8123:8123
     cap_add:
       - SYS_NICE
       - NET_ADMIN
@@ -21,6 +21,12 @@ services:
       - ./data:/var/lib/clickhouse
       - ./logs:/var/log/clickhouse-server
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - clickhouse
 

@@ -80,7 +80,7 @@ if [[ -z "$NUM" ]]; then
   exit 1
 fi
 
-if [[ -f "${CLIENT}_publickey" ]]; then
+if [[ -f "${CLIENT}_public.key" ]]; then
   echo -e "${RED} Error: file '${CLIENT}_public.key' already exists.${NC}"
   exit 1
 fi
