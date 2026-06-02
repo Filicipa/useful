@@ -17,7 +17,7 @@ scrape_configs:
         refresh_interval: 5s
         filters:
           - name: name
-            values: [stage-bot]
+            values: [api, ponder, "^/postgres$", valkey]
 
     relabel_configs:
       - source_labels: [__meta_docker_container_name]

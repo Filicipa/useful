@@ -1,0 +1,12 @@
+services:
+  nats_exporter:
+    image: natsio/prometheus-nats-exporter:0.20.1
+    container_name: nats_exporter
+    restart: always
+    depends_on:
+      - nats
+    networks:
+      - backend
+    ports:
+      - 7777:7777
+    command: "-connz -varz -subz -healthz -routez http://nats:8222"
