@@ -1,5 +1,5 @@
 ```bash
-sudo certbot certonly --standalone -d your_domain
+sudo certbot certonly --standalone -d <your_domain>
 ```
 
 ## Certbot in compose
@@ -23,7 +23,7 @@ server {
 ```yml
 services:
   nginx:
-    container_name: ms_nginx
+    container_name: nginx
     image: nginx
     ports:
       - 80:80
@@ -43,5 +43,5 @@ services:
 ```
 Run command 
 ```bash
-docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d mealshift.co.uk -d www.mealshift.co.uk -d dashboard.mealshift.co.uk --email you@gmail.com --agree-tos --no-eff-email --non-interactive
+docker compose run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d <domain> -d www.<domain> -d dashboard.<domain> --email you@gmail.com --agree-tos --no-eff-email --non-interactive
 ```

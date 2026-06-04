@@ -17,7 +17,7 @@ export CLIENT=<client_name>
 wg genkey | tee $CLIENT"_private.key" | wg pubkey > $CLIENT"_public.key"
 ```
 ### Create server config file `wg0.conf`
-```ini
+```conf
 [Interface]
 # Internal IP-server WireGuard
 Address = 10.0.0.1/24
@@ -48,7 +48,7 @@ wg show
 ```
 
 ### Create user config file
-```ini
+```conf
 [Interface]
 # User private key
 PrivateKey = 

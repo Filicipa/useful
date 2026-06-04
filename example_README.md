@@ -62,7 +62,7 @@ cargo test
 
 ---
 
-### Docker Ruild
+### Docker Build
 
 ```docker
 docker build -t <image_name> .

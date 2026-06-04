@@ -1,0 +1,250 @@
+// ============================================================================
+// БЛОК 1. ТОЧКИ НАЗНАЧЕНИЯ (BACKENDS)
+// Базы данных, куда стекаются все потоки телеметрии.
+// Сюда сходятся финальные ссылки (Writers) из всех остальных пайплайнов.
+// ============================================================================
+
+// Компонент принимает логи по протоколу Loki push API и отправляет их в базу Loki.
+// Ссылка для отправки из других блоков: [loki.write.loki_backend.receiver]
+loki.write "loki_backend" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// Компонент принимает метрики и отправляет их в Prometheus через Remote Write.
+// Ссылка для отправки из других блоков: [prometheus.remote_write.prometheus_backend.receiver]
+prometheus.remote_write "prometheus_backend" {
+  endpoint {
+    // ЗАМЕНЯЙ НА IP СВОЕГО СЕРВЕРА МОНИТОРИНГА
+    url = "http://YOUR_PROMETHEUS_SERVER_IP:9090/api/v1/write"
+  }
+}
+
+
+// ============================================================================
+// БЛОК 2. СБОР МЕТРИК (Пайплайн Prometheus)
+// Цепочка: Встроенные Экспортеры ➡️ Сборщик (Scraper) ➡️ Модификатор лейблов ➡️ Пуш
+// ============================================================================
+
+// --- Шаг 2.1: Активация встроенных экспортеров (Замена старых контейнеров) ---
+
+// Замена контейнера 'node-exporter'. Собирает метрики ОС (ЦП, ОЗУ, Диски, Сеть).
+prometheus.exporter.unix "node_exporter" {
+  disable_collectors = ["rapl"] // Отключение специфичных метрик питания процессора
+}
+
+// Замена контейнера 'nginx-prometheus-exporter'. Собирает статус веб-сервера.
+prometheus.exporter.nginx "nginx_exporter" {
+  address = "http://192.168.18.8:9099/nginx_status"
+}
+
+// Замена контейнера 'postgres-exporter'. Подключается к БД и собирает метрики СУБД.
+prometheus.exporter.postgres "postgres_exporter" {
+  data_source_names = ["postgresql://user:password@postgres:5432/db?sslmode=disable"]
+}
+
+// Замена контейнера 'cadvisor'. Собирает статистику утилизации ресурсов контейнерами Docker.
+prometheus.exporter.cadvisor "cadvisor" {
+  docker_only = true
+  rootfs_path = "/rootfs" // Путь к корню хоста внутри контейнера Alloy
+}
+
+// --- Шаг 2.2: Централизованный опрос (Scrape) и объединение целей ---
+
+// Этот компонент работает как стандартный скрейпер Prometheus.
+// Он опрашивает (pull) метрики с вышеуказанных модулей, которые крутятся внутри самого Alloy.
+prometheus.scrape "exporters_scraper" {
+  // Функция concat() склеивает списки таргетов со всех четырех экспортеров в один общий массив
+  targets = concat(
+    prometheus.exporter.unix.node_exporter.targets,
+    prometheus.exporter.nginx.nginx_exporter.targets,
+    prometheus.exporter.postgres.postgres_exporter.targets,
+    prometheus.exporter.cadvisor.cadvisor.targets,
+  )
+
+  scrape_interval = "10s" // Частота сбора метрик
+  
+  // ВАЖНО: Собранные метрики мы отправляем НЕ в базу, а сначала на этап релейблинга (подмены меток)
+  forward_to = [prometheus.relabel.force_instance_label.receiver]
+}
+
+// --- Шаг 2.3: Модификация метаданных метрик (Relabeling) ---
+
+// Компонент перехватывает поток метрик и на лету изменяет или добавляет к ним лейблы.
+prometheus.relabel "force_instance_label" {
+  // Намертво перезаписываем лейбл 'instance', чтобы твои старые дашборды Grafana не ломались
+  rule {
+    target_label = "instance"
+    replacement  = "prod-backend" // На dev-сервере замени это значение на "dev-backend"
+  }
+
+  // Финал цепочки метрик: очищенные данные с правильным инстансом отправляем в Prometheus
+  forward_to = [prometheus.remote_write.prometheus_backend.receiver]
+}
+
+
+// ============================================================================
+// БЛОК 3. СБОР ЛОГОВ (Пайплайн Loki)
+// Цепочка: Обнаружение источников ➡️ Фильтрация/Релейблинг ➡️ Обработка текста ➡️ Пуш
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// ПОДПАЙПЛАЙН 3.1: Основные Docker контейнеры (api, ponder, postgres, valkey)
+// ----------------------------------------------------------------------------
+
+// Ищем контейнеры через Docker API сокета на основе их имен
+discovery.docker "docker_main" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+  
+  filter {
+    name   = "name"
+    values = ["api", "ponder", "^/postgres$", "valkey"] // Маска и точные имена для отслеживания
+  }
+}
+
+// Приводим страшные внутренние Docker-лейблы к красивому системному виду
+discovery.relabel "docker_main_relabel" {
+  targets = discovery.docker.docker_main.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = r"\/?(.*)" // Отрезаем ведущий слэш из имени контейнера, который отдает Docker API
+    target_label  = "container_name"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+}
+
+// Парсинг внутренней структуры самого лога
+loki.process "docker_main_pipeline" {
+  // Если лог внутри представляет собой JSON, вытаскиваем поля во временные переменные
+  stage.json {
+    expressions = {
+      level = "log_level",
+      msg   = "message",
+    }
+  }
+
+  forward_to = [loki.write.loki_backend.receiver]
+}
+
+// Финальный сборщик логов Docker: связывает воедино отфильтрованные таргеты и пайплайн парсинга
+loki.source.docker "docker_main_source" {
+  targets    = discovery.relabel.docker_main_relabel.output
+  forward_to = [loki.process.docker_main_pipeline.receiver]
+}
+
+// ----------------------------------------------------------------------------
+// ПОДПАЙПЛАЙН 3.2: Сетевой Syslog (Прием внешних логов по сети)
+// ----------------------------------------------------------------------------
+
+// Внутренняя обработка структуры syslog перед отправкой
+loki.process "syslog_pipeline" {
+  // Извлекаем имя хоста, приславшего лог, и превращаем в постоянный поисковый тег
+  stage.relabel {
+    rule {
+      source_labels = ["__syslog_message_hostname"]
+      target_label  = "hostname"
+    }
+  }
+
+  forward_to = [loki.write.loki_backend.receiver]
+}
+
+// Запускает сетевой слушатель (сервер). Он открывает порт 1514 и ждет логи от приложений.
+loki.source.syslog "syslog_api" {
+  listener {
+    address = "0.0.0.0:1514"
+    labels  = { job = "api_syslog", service = "api" } // Базовые маркеры для этого источника
+  }
+  forward_to = [loki.process.syslog_pipeline.receiver]
+}
+
+// ----------------------------------------------------------------------------
+// ПОДПАЙПЛАЙН 3.3: Текстовые файлы логов хоста (*.log)
+// ----------------------------------------------------------------------------
+
+// Сканируем локальную файловую систему на наличие файлов по маске
+local.file_match "system_files" {
+  path_targets = [{
+    __address__ = "localhost",
+    __path__    = "/log/*.log",
+    job         = "varlogs",
+    host        = "yourhost",
+  }]
+}
+
+// Читает обнаруженные текстовые файлы построчно и отправляет напрямую в Loki
+loki.source.file "system_source" {
+  targets    = local.file_match.system_files.targets
+  forward_to = [loki.write.loki_backend.receiver]
+  
+  // Файл-память. Хранит информацию о том, где Alloy закончил читать файл, чтобы не читать терабайты логов заново при перезапуске.
+  legacy_positions_file = "/data/promtail/positions.yaml"
+}
+
+// ----------------------------------------------------------------------------
+// ПОДПАЙПЛАЙН 3.4: docker-filter (Фильтрация и вытаскивание уровней логов по Regex)
+// ----------------------------------------------------------------------------
+
+// Ищем вторую группу контейнеров (api, worker, postgres)
+discovery.docker "docker_filter" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "5s"
+  
+  filter {
+    name   = "name"
+    values = ["api", "worker", "^/postgres$"]
+  }
+}
+
+// Формируем лейблы для фильтруемых контейнеров
+discovery.relabel "docker_filter_relabel" {
+  targets = discovery.docker.docker_filter.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = r"\/?(.*)"
+    target_label  = "container_name"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    target_label  = "container_id"
+  }
+
+  // Принудительный статический лейбл инстанса для логов этой группы
+  rule {
+    target_label = "instance"
+    replacement  = "compound-integration-kit-dev"
+  }
+}
+
+// Сложная обработка неструктурированного текста лога через регулярные выражения
+loki.process "docker_filter_pipeline" {
+  // Шаг 1: Ищем ключевые слова (INFO|WARN|ERROR) в сырой строке текста лога.
+  // Нашедшееся слово временно помещаем в переменную <level> благодаря именованной группе (?P<level>...)
+  stage.regex {
+    expression = r"\b(?P<level>INFO|WARN|ERROR|FATAL|DEBUG|LOG)\b"
+  }
+
+  // Шаг 2: Извлекаем значение из переменной 'level' и превращаем его в индексируемый лейбл лога 'log_level'
+  stage.labels {
+    values = {
+      log_level = "level",
+    }
+  }
+
+  forward_to = [loki.write.loki_backend.receiver]
+}
+
+// Сборщик логов для группы docker-filter
+loki.source.docker "docker_filter_source" {
+  targets    = discovery.relabel.docker_filter_relabel.output
+  forward_to = [loki.process.docker_filter_pipeline.receiver]
+}

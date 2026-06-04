@@ -55,3 +55,42 @@ scrape_configs:
           job: varlogs # A `job` label is fairly standard in prometheus and useful for linking metrics and logs.
           host: yourhost # A `host` label will help identify logs from this machine vs others
           __path__: /log/*.log
+
+  - job_name: docker-filter
+    docker_sd_configs:
+      - host: "unix:///var/run/docker.sock"
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values: [api, worker, "^/postgres$"]
+    relabel_configs:
+      - source_labels: [__meta_docker_container_name]
+        regex: "\\/?(.*)"
+        target_label: container_name
+
+      - source_labels: [__meta_docker_container_id]
+        target_label: container_id
+
+      - target_label: instance
+        replacement: compound-integration-kit-dev
+
+    pipeline_stages:
+      - docker: {}
+      - regex:
+          expression: "\b(?P<level>INFO|WARN|ERROR|FATAL|DEBUG|LOG)\b"
+      - labels:
+          log_level: level
+    # Parse json
+    # pipeline_stages:
+    #   - docker: {}
+    #   - match:
+    #       selector: '{container_name=~".*api.*|.*worker.*"}'
+    #       stages:
+    #         - json:
+    #             expressions:
+    #               level: level
+    #         - template:
+    #             source: level
+    #             template: '{{ if eq .Value "30" }}INFO{{ else if eq .Value "40" }}WARN{{ else if eq .Value "50" }}ERROR{{ else if eq .Value "60" }}FATAL{{ else if eq .Value "20" }}DEBUG{{ else if eq .Value "10" }}TRACE{{ else }}INFO{{ end }}'
+    #         - labels:
+    #             log_level: level

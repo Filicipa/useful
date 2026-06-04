@@ -1,0 +1,24 @@
+services:
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy
+    # privileged нужен для cAdvisor, чтобы читать системные метрики контейнеров
+    privileged: true
+    user: "0:0"
+    restart: unless-stopped
+    command: run --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    volumes:
+      - ./config.alloy:/etc/alloy/config.alloy
+      # Volumes для сбора логов (из твоего предыдущего конфига Promtail):
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /log:/log:ro
+      # Volumes для сбора метрик железа (взамен Node Exporter):
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    environment:
+      # Указываем Alloy, где искать системные папки хоста
+      - NODE_OPTIONS=--path.procfs=/host/proc --path.sysfs=/host/sys --path.rootfs=/rootfs
+    networks:
+      - monitoring
+      - backend # Добавляем сеть backend, чтобы Alloy мог достучаться до контейнера 'postgres'
