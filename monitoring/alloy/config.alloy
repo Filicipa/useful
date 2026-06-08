@@ -42,8 +42,20 @@ prometheus.exporter.nginx "nginx_exporter" {
 // Замена контейнера 'postgres-exporter'. Подключается к БД и собирает метрики СУБД.
 prometheus.exporter.postgres "postgres_exporter" {
   data_source_names = ["postgresql://user:password@postgres:5432/db?sslmode=disable"]
-}
+  
+  // 1. Явно включаем коллектор "stat_statements" в список активных
+  enabled_collectors = ["database", "locks", "stat_bgwriter", "stat_statements"]
 
+  // 2. Настраиваем поведение сбора статистики запросов
+  stat_statements {
+    include_query = true  // Разрешает передавать текст SQL-запроса прямо в метрики
+    query_length  = 200   // Обрезает текст запроса до 200 символов (чтобы не перегружать память)
+    limit         = 10    // Забирает только ТОП-10 самых тяжелых запросов
+    
+    // При необходимости можно исключить служебные БД или пользователей:
+    // exclude_databases = ["alloydbadmin"]
+  }
+}
 // Замена контейнера 'cadvisor'. Собирает статистику утилизации ресурсов контейнерами Docker.
 prometheus.exporter.cadvisor "cadvisor" {
   docker_only = true
@@ -73,10 +85,10 @@ prometheus.scrape "exporters_scraper" {
 
 // Компонент перехватывает поток метрик и на лету изменяет или добавляет к ним лейблы.
 prometheus.relabel "force_instance_label" {
-  // Намертво перезаписываем лейбл 'instance', чтобы твои старые дашборды Grafana не ломались
+  // Намертво перезаписываем лейбл 'instance'.
   rule {
     target_label = "instance"
-    replacement  = "prod-backend" // На dev-сервере замени это значение на "dev-backend"
+    replacement  = "prod-backend"
   }
 
   // Финал цепочки метрик: очищенные данные с правильным инстансом отправляем в Prometheus
