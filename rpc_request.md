@@ -1,6 +1,10 @@
 ```bash
-curl --location 'https://rpc-one-dollar.blaize.technology/' --header 'Content-Type: application/json' --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
+curl --location 'https://rpc-one-dollar.blaize.technology/' \
+    --header 'Content-Type: application/json' \
+    --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
 ```
 ```bash
-curl --location 'http://localhost:8545' --header 'Content-Type: application/json' --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
+curl --location 'http://localhost:8545' \
+    --header 'Content-Type: application/json' \
+    --data '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
 ```
