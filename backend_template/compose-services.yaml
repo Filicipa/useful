@@ -58,7 +58,7 @@ services:
     healthcheck:
       test:
         [
-          "CMD, wget --no-verbose --tries=1 --spider http://localhost:2019/metrics || exit 1",
+          "CMD, wget, --no-verbose, --tries=1, --spider, http://localhost:2019/metrics",
         ]
       interval: 1m30s
       timeout: 10s

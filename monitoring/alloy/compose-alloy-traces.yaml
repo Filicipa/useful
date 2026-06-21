@@ -1,0 +1,36 @@
+# Alloy вместо otel-collector (monitoring/otel/compose.yaml)
+# Запуск: docker compose -f compose-alloy-traces.yaml up -d
+#
+# Приложения на backend-сети шлют OTLP на alloy:4317 / :4318
+# Alloy пересылает traces в tempo (monitoring), metrics — в Prometheus
+
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "5m"
+    max-file: "3"
+
+services:
+  alloy:
+    image: grafana/alloy:latest
+    container_name: alloy-traces
+    restart: unless-stopped
+    command: run --server.http.listen-addr=0.0.0.0:12345 --storage.path=/var/lib/alloy/data /etc/alloy/config-traces.alloy
+    volumes:
+      - ./config-traces.alloy:/etc/alloy/config-traces.alloy
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "12345:12345" # Alloy UI / ready
+    networks:
+      - backend
+      - monitoring
+    logging: *logging
+
+networks:
+  backend:
+    name: backend
+    external: true
+  monitoring:
+    name: monitoring
+    external: true

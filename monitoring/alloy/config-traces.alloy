@@ -1,0 +1,132 @@
+// ============================================================================
+// Замена otel-collector (monitoring/otel/otel-collector-config.yaml)
+//
+// Приложения шлют OTLP сюда (4317 gRPC / 4318 HTTP):
+//   traces  → Tempo
+//   metrics → Prometheus (remote write)
+//
+// Пайплайн traces (как в комментариях к OTel-конфигу):
+//   otlp → memory_limiter → filter → tail_sampling → batch → tempo
+//
+// Примечание: в otel-collector-config.yaml tail_sampling и filter объявлены,
+// но в service.pipelines.traces подключены только memory_limiter и batch.
+// Здесь — полная версия из комментариев. Упростить: убрать filter и
+// tail_sampling, направить traces сразу в otelcol.processor.batch.otel_traces.
+// ============================================================================
+
+prometheus.remote_write "prometheus_backend" {
+  endpoint {
+    // Локальный стек: http://prometheus:9090/api/v1/write
+    url = "http://YOUR_PROMETHEUS_SERVER_IP:9090/api/v1/write"
+  }
+}
+
+// --- Приём OTLP от приложений (замена receivers.otlp) ---
+
+otelcol.receiver.otlp "apps" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.memory_limiter.otel.input]
+    traces  = [otelcol.processor.memory_limiter.otel.input]
+  }
+}
+
+// --- Processors (общий memory_limiter для traces и metrics) ---
+
+otelcol.processor.memory_limiter "otel" {
+  check_interval = "1s"
+  limit          = "256MiB"
+  spike_limit    = "64MiB"
+
+  output {
+    metrics = [otelcol.processor.batch.otel_metrics.input]
+    traces  = [otelcol.processor.filter.drop_noise.input]
+  }
+}
+
+// filter/drop_healthchecks из otel-collector-config.yaml
+otelcol.processor.filter "drop_noise" {
+  error_mode = "ignore"
+
+  traces {
+    span = [
+      `name == "GET /ping"`,
+      `name == "GET /health"`,
+      `attributes["http.target"] == "/metrics"`,
+    ]
+  }
+
+  output {
+    traces = [otelcol.processor.tail_sampling.default.input]
+  }
+}
+
+otelcol.processor.tail_sampling "default" {
+  decision_wait               = "10s"
+  num_traces                  = 10000
+  expected_new_traces_per_sec = 2000
+
+  // ERROR — сохраняем 100% трейсов
+  policy {
+    name = "keep_errors_policy"
+    type = "status_code"
+
+    status_code {
+      status_codes = ["ERROR"]
+    }
+  }
+
+  // Успешные — только 5%
+  policy {
+    name = "probabilistic_sample_policy"
+    type = "probabilistic"
+
+    probabilistic {
+      sampling_percentage = 5.0
+    }
+  }
+
+  output {
+    traces = [otelcol.processor.batch.otel_traces.input]
+  }
+}
+
+otelcol.processor.batch "otel_traces" {
+  timeout = "1s"
+
+  output {
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.processor.batch "otel_metrics" {
+  timeout = "1s"
+
+  output {
+    metrics = [otelcol.exporter.prometheus.otel.input]
+  }
+}
+
+// --- Exporters ---
+
+// Замена exporters.otlp/tempo (в OTel был 192.168.17.187:4317)
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// Замена exporters.prometheus :8889 — сразу в Prometheus, без отдельного scrape job
+otelcol.exporter.prometheus "otel" {
+  forward_to = [prometheus.remote_write.prometheus_backend.receiver]
+}

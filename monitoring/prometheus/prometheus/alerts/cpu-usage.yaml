@@ -2,9 +2,8 @@ groups:
   - name: High CPU Usage
     rules:
       - alert: High CPU Usage
-        expr: |
-          100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 70
-        for: 2m
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 70
+        for: 5m
         labels:
           severity: warning
           instance: "{{ $labels.instance }}"

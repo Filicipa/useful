@@ -30,7 +30,10 @@ prometheus.remote_write "prometheus_backend" {
 // --- Шаг 2.1: Активация встроенных экспортеров (Замена старых контейнеров) ---
 
 // Замена контейнера 'node-exporter'. Собирает метрики ОС (ЦП, ОЗУ, Диски, Сеть).
-prometheus.exporter.unix "node_exporter" {
+prometheus.exporter.unix "node_exporter" { 
+  procfs_path = "/host/proc"
+  sysfs_path  = "/host/sys"
+  rootfs_path = "/rootfs"
   disable_collectors = ["rapl"] // Отключение специфичных метрик питания процессора
 }
 
@@ -102,7 +105,56 @@ prometheus.relabel "force_instance_label" {
 // ============================================================================
 
 // ----------------------------------------------------------------------------
-// ПОДПАЙПЛАЙН 3.1: Основные Docker контейнеры (api, ponder, postgres, valkey)
+// ПОДПАЙПЛАЙН 3.1: Сетевой Syslog (Прием внешних логов по сети)
+// ----------------------------------------------------------------------------
+
+// Внутренняя обработка структуры syslog перед отправкой
+loki.process "syslog_pipeline" {
+  // Извлекаем имя хоста, приславшего лог, и превращаем в постоянный поисковый тег
+  stage.relabel {
+    rule {
+      source_labels = ["__syslog_message_hostname"]
+      target_label  = "hostname"
+    }
+  }
+
+  forward_to = [loki.write.loki_backend.receiver]
+}
+
+// Запускает сетевой слушатель (сервер). Он открывает порт 1514 и ждет логи от приложений.
+loki.source.syslog "syslog_api" {
+  listener {
+    address = "0.0.0.0:1514"
+    labels  = { job = "api_syslog", service = "api" } // Базовые маркеры для этого источника
+  }
+  forward_to = [loki.process.syslog_pipeline.receiver]
+}
+
+// ----------------------------------------------------------------------------
+// ПОДПАЙПЛАЙН 3.2: Текстовые файлы логов хоста (*.log)
+// ----------------------------------------------------------------------------
+
+// Сканируем локальную файловую систему на наличие файлов по маске
+local.file_match "system_files" {
+  path_targets = [{
+    __address__ = "localhost",
+    __path__    = "/log/*.log",
+    job         = "varlogs",
+    host        = "yourhost",
+  }]
+}
+
+// Читает обнаруженные текстовые файлы построчно и отправляет напрямую в Loki
+loki.source.file "system_source" {
+  targets    = local.file_match.system_files.targets
+  forward_to = [loki.write.loki_backend.receiver]
+  // Файл-память. Хранит информацию о том, где Alloy закончил читать файл, чтобы не читать терабайты логов заново при перезапуске.
+  legacy_positions_file = "/data/promtail/positions.yaml"
+}
+
+// 3.3 OR 3.4
+// ----------------------------------------------------------------------------
+// ПОДПАЙПЛАЙН 3.3: Основные Docker контейнеры (api, ponder, postgres, valkey)
 // ----------------------------------------------------------------------------
 
 // Ищем контейнеры через Docker API сокета на основе их имен
@@ -149,55 +201,6 @@ loki.process "docker_main_pipeline" {
 loki.source.docker "docker_main_source" {
   targets    = discovery.relabel.docker_main_relabel.output
   forward_to = [loki.process.docker_main_pipeline.receiver]
-}
-
-// ----------------------------------------------------------------------------
-// ПОДПАЙПЛАЙН 3.2: Сетевой Syslog (Прием внешних логов по сети)
-// ----------------------------------------------------------------------------
-
-// Внутренняя обработка структуры syslog перед отправкой
-loki.process "syslog_pipeline" {
-  // Извлекаем имя хоста, приславшего лог, и превращаем в постоянный поисковый тег
-  stage.relabel {
-    rule {
-      source_labels = ["__syslog_message_hostname"]
-      target_label  = "hostname"
-    }
-  }
-
-  forward_to = [loki.write.loki_backend.receiver]
-}
-
-// Запускает сетевой слушатель (сервер). Он открывает порт 1514 и ждет логи от приложений.
-loki.source.syslog "syslog_api" {
-  listener {
-    address = "0.0.0.0:1514"
-    labels  = { job = "api_syslog", service = "api" } // Базовые маркеры для этого источника
-  }
-  forward_to = [loki.process.syslog_pipeline.receiver]
-}
-
-// ----------------------------------------------------------------------------
-// ПОДПАЙПЛАЙН 3.3: Текстовые файлы логов хоста (*.log)
-// ----------------------------------------------------------------------------
-
-// Сканируем локальную файловую систему на наличие файлов по маске
-local.file_match "system_files" {
-  path_targets = [{
-    __address__ = "localhost",
-    __path__    = "/log/*.log",
-    job         = "varlogs",
-    host        = "yourhost",
-  }]
-}
-
-// Читает обнаруженные текстовые файлы построчно и отправляет напрямую в Loki
-loki.source.file "system_source" {
-  targets    = local.file_match.system_files.targets
-  forward_to = [loki.write.loki_backend.receiver]
-  
-  // Файл-память. Хранит информацию о том, где Alloy закончил читать файл, чтобы не читать терабайты логов заново при перезапуске.
-  legacy_positions_file = "/data/promtail/positions.yaml"
 }
 
 // ----------------------------------------------------------------------------
