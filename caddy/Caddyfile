@@ -1,12 +1,15 @@
 # Grafana dashboard id 22870
 {
-         metrics
-#        debug
+        metrics {
+                per_host
+        }
 }
 
 :2019 {
-	metrics /metrics
+    bind 0.0.0.0
+    metrics /metrics
 }
+
 
 example.com {
         reverse_proxy backend:3000
