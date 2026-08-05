@@ -49,7 +49,7 @@ receivers:
 
   - name: "slack-blackbox"
     slack_configs:
-      - api_url: "https://hooks.slack.com/services/T06HCSNCGU9/<webhook_id>"
+      - api_url: "https://hooks.slack.com/services/<webhook_id>"
         channel: "#compound-grant-integr-kit-notifier"
         send_resolved: true
         text: |
