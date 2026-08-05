@@ -46,3 +46,16 @@ receivers:
           • {{ .Labels.instance }}
           {{- end }}
           {{- end }}
+
+  - name: "slack-blackbox"
+    slack_configs:
+      - api_url: "https://hooks.slack.com/services/T06HCSNCGU9/<webhook_id>"
+        channel: "#compound-grant-integr-kit-notifier"
+        send_resolved: true
+        text: |
+          {{- if eq .Status "firing" -}}
+          🚨 HOST DOWN: {{ .CommonLabels.instance }}
+          🛠 Service: {{ .CommonLabels.job }}
+          {{- else -}}
+          ✅ RESOLVED: {{ .CommonLabels.instance }} is back online.
+          {{- end }}
