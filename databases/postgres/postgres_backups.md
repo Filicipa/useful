@@ -1,3 +1,8 @@
+## Check DB size
+```bash
+docker exec postgres psql -U <db_user> -d <db_name> -c "SELECT pg_size_pretty(pg_database_size(current_database()));"
+```
+
 ## Full dump
 ```
 pg_dump -h <hostname> -p 5432 -U <username> -Fc -b -v -f <dumpfilelocation.sql> -d  <database_name>
