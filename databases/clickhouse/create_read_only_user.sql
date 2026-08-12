@@ -1,5 +1,4 @@
-CREATE USER IF NOT EXISTS <user>
-IDENTIFIED WITH plaintext_password BY 'StrongPasswordHere';
+CREATE USER IF NOT EXISTS <user> IDENTIFIED WITH plaintext_password BY 'StrongPasswordHere';
 
 GRANT SELECT ON <database>.* TO <user>;
 

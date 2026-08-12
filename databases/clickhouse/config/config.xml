@@ -1,0 +1,25 @@
+<clickhouse>
+
+    <!-- Internal ClickHouse logging -->
+    <logger>
+        <level>information</level>
+        <size>100M</size>
+        <count>5</count>
+        
+        <log remove="remove"/>
+        <errorlog remove="remove"/>
+        <console>1</console>
+        <console_log_level>information</console_log_level>
+    </logger>
+
+    <!-- Prometheus metrics -->
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>9363</port>
+        <metrics>true</metrics>
+        <asynchronous_metrics>true</asynchronous_metrics>
+        <events>true</events>
+        <errors>true</errors>
+    </prometheus>
+
+</clickhouse>
