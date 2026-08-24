@@ -43,3 +43,11 @@ example.com/metrics {
 
     respond "Forbidden" 403
 }
+
+example.com {
+        basic_auth /* {
+                # Username "User", password "Password bcrypt"
+                User $2a$12$NJ4GRu
+        }
+        reverse_proxy container:1234
+}
