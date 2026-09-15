@@ -1,0 +1,63 @@
+{
+  "family": "scc-prod-api",
+  "taskRoleArn": "arn:aws:iam::447725070155:role/scc-prod-api-task-role",
+  "executionRoleArn": "arn:aws:iam::447725070155:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "containerDefinitions": [
+    {
+      "name": "prod-api",
+      "image": "447725070155.dkr.ecr.ap-southeast-1.amazonaws.com/scc-prod/api-core:latest",
+      "command": [
+        "/app/api"
+      ],
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "name": "backend-8080",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environmentFiles": [
+        {
+          "value": "arn:aws:s3:::scc-backend-447725070155-ap-southeast-1-an/prod.env",
+          "type": "s3"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "ADMIN_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:447725070155:secret:prod/scc/backend-wOPoHg:ADMIN_API_KEY::"
+        },
+        {
+          "name": "JWT_SECRET_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:447725070155:secret:prod/scc/backend-wOPoHg:JWT_SECRET_KEY::"
+        },
+        {
+          "name": "COSIGNER_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:447725070155:secret:prod/scc/backend-wOPoHg:COSIGNER_API_KEY::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/scc-prod-api",
+          "awslogs-create-group": "true",
+          "awslogs-region": "ap-southeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

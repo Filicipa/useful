@@ -1,0 +1,58 @@
+{
+    "family": "scc-prod-migrations",
+    "executionRoleArn": "arn:aws:iam::447725070155:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "containerDefinitions": [
+        {
+            "name": "scc-prod-migrations",
+            "image": "447725070155.dkr.ecr.ap-southeast-1.amazonaws.com/scc-prod/migrations:latest",
+            "essential": true,
+            "environment": [
+                {
+                    "name": "FLYWAY_LOCATIONS",
+                    "value": "filesystem:/flyway/sql"
+                },
+                {
+                    "name": "FLYWAY_CONNECT_RETRIES",
+                    "value": "6"
+                },
+                {
+                    "name": "FLYWAY_VALIDATE_MIGRATION_NAMING",
+                    "value": "true"
+                }
+            ],
+            "secrets": [
+                {
+                    "name": "FLYWAY_URL",
+                    "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:447725070155:secret:prod/scc/backend-wOPoHg:FLYWAY_URL::"
+                },
+                {
+                    "name": "FLYWAY_USER",
+                    "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:447725070155:secret:rds!db-ba28b9e4-3999-467b-9b99-50fd595a442b-l2WZuW:username::"
+                },
+                {
+                    "name": "FLYWAY_PASSWORD",
+                    "valueFrom": "arn:aws:secretsmanager:ap-southeast-1:447725070155:secret:rds!db-ba28b9e4-3999-467b-9b99-50fd595a442b-l2WZuW:password::"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/scc-prod-migrations",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "ap-southeast-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

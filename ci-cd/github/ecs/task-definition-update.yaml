@@ -1,0 +1,121 @@
+name: PROD-ECS-cosigner
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - v*.*.*
+    paths-ignore:
+      - .github/workflows/**
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REGISTRY: "447725070155.dkr.ecr.ap-southeast-1.amazonaws.com"
+  IMAGE_NAME: "scc-prod/cosigner"
+  IMAGE_TAG: ${GITHUB_REF#refs/*/}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  Build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::966042699459:role/GitHubActionsStageRole
+          aws-region: ap-southeast-1
+          audience: sts.amazonaws.com
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build cosigner image
+        run: |
+          docker build . -f Dockerfile.cosigner -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Push cosigner image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-24.04
+    env:
+      ECS_CLUSTER: "scc"
+      ECS_SERVICE: "prod-cosigner"
+      TASK_DEFINITION: "task-definition-prod-cosigner.json"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::447725070155:role/GitHubActionsProdRole
+          aws-region: ${{ env.AWS_REGION }}
+          audience: sts.amazonaws.com
+
+      - name: Prepare task definition
+        run: |
+          jq -e \
+            --arg image "${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" \
+            '.containerDefinitions[0].image = $image' \
+            "${{ env.TASK_DEFINITION }}" \
+            > task-definition-rendered.json
+
+      - name: Register Task Definition
+        id: register
+        run: |
+          TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://task-definition-rendered.json \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          echo "TASK_DEFINITION_ARN=$TASK_DEFINITION_ARN" >> "$GITHUB_OUTPUT"
+          echo "Registered: $TASK_DEFINITION_ARN"
+
+      - name: Update Cosigner service
+        run: |
+          aws ecs update-service \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --service "${{ env.ECS_SERVICE }}" \
+            --task-definition "${{ steps.register.outputs.TASK_DEFINITION_ARN }}" \
+            --force-new-deployment
+
+      - name: Verify rollout
+        env:
+          TASK_DEFINITION_ARN: ${{ steps.register.outputs.TASK_DEFINITION_ARN }}
+        run: |
+          set -euo pipefail
+
+          echo "Waiting for ECS service to become stable..."
+
+          aws ecs wait services-stable \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}"
+
+          ACTUAL=$(aws ecs describe-services \
+            --cluster "${{ env.ECS_CLUSTER }}" \
+            --services "${{ env.ECS_SERVICE }}" \
+            --query 'services[0].taskDefinition' \
+            --output text)
+
+          echo "Expected: $TASK_DEFINITION_ARN"
+          echo "Actual:   $ACTUAL"
+
+          if [ "$ACTUAL" != "$TASK_DEFINITION_ARN" ]; then
+            echo "❌ Deployment did not reach expected task definition"
+            exit 1
+          fi
+
+          echo "✅ Cosigner deployment successful"

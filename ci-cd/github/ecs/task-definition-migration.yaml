@@ -1,0 +1,207 @@
+# NEED REVIEW
+
+name: PROD
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - v*.*.*
+    paths-ignore:
+      - .github/workflows/**
+
+env:
+  AWS_REGION: ap-southeast-1
+  ECR_REGISTRY: "447725070155.dkr.ecr.ap-southeast-1.amazonaws.com"
+  ECS_SG: "sg-0eb34e5edfa861fc9"
+  S3_ENV_ARN: "arn:aws:s3:::scc-backend-447725070155-ap-southeast-1-an/prod.env"
+  # The services run here, with no public IP.
+  PRIVATE_SUBNETS: "subnet-0ea44f4bcca184e8f,subnet-0e0a12f66a676e308"
+  # Migrations run in the IGW-routed subnets and need a public IP to reach ECR.
+  MIGRATIONS_SUBNETS: "subnet-0e6db5fa408fba839,subnet-0955129c9479eac9f"
+
+jobs:
+  Build:
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      name: "scc-prod/api-core"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set safe docker tag
+        run: |
+          RAW_TAG=${GITHUB_REF#refs/*/}
+          SAFE_TAG=${RAW_TAG//\//-}
+          echo "tag=$SAFE_TAG" >> $GITHUB_ENV
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::447725070155:role/GitHubActionsProdRole
+          aws-region: ap-southeast-1
+          audience: sts.amazonaws.com
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build migrations image
+        run: |
+          docker build -t ${{ env.ECR_REGISTRY }}/scc-prod/migrations:${{ env.tag }} -f ./migrations/Dockerfile.migrations ./migrations/ --build-arg STAGE=prod
+          docker tag ${{ env.ECR_REGISTRY }}/scc-prod/migrations:${{ env.tag }} ${{ env.ECR_REGISTRY }}/scc-prod/migrations:latest
+
+      - name: Build backend image
+        run: |
+          docker build . -t ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }} ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
+
+      - name: Push backend image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
+
+      - name: Push migrations image to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/scc-prod/migrations:${{ env.tag }}
+          docker push ${{ env.ECR_REGISTRY }}/scc-prod/migrations:latest
+
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      cluster_name: "scc"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::447725070155:role/GitHubActionsProdRole
+          aws-region: ap-southeast-1
+          audience: sts.amazonaws.com
+
+      - name: Register API Task Definition
+        run: |
+          API_TD=$(aws ecs register-task-definition --cli-input-json file://task-definition-prod-api.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "API_TD=$API_TD" >> $GITHUB_ENV
+          echo "registered $API_TD"
+
+      - name: Register Worker Task Definition
+        run: |
+          WORKER_TD=$(aws ecs register-task-definition --cli-input-json file://task-definition-prod-worker.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "WORKER_TD=$WORKER_TD" >> $GITHUB_ENV
+          echo "registered $WORKER_TD"
+
+      - name: Register Migrations Task Definition
+        run: |
+          MIGRATIONS_TD=$(aws ecs register-task-definition --cli-input-json file://task-definition-prod-migrations.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "MIGRATIONS_TD=$MIGRATIONS_TD" >> $GITHUB_ENV
+          echo "registered $MIGRATIONS_TD"
+
+      - name: Run ECS migrations
+        run: |
+          set -e
+          echo "Running Flyway migrations..."
+          TASK_ARN=$(aws ecs run-task \
+            --cluster ${{ env.cluster_name }} \
+            --task-definition "$MIGRATIONS_TD" \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ env.MIGRATIONS_SUBNETS }}],securityGroups=[${{ env.ECS_SG }}],assignPublicIp=ENABLED}" \
+            --query "tasks[0].taskArn" \
+            --output text)
+
+          echo "Migration task ARN: $TASK_ARN"
+          echo "Waiting for migration task to stop..."
+          aws ecs wait tasks-stopped --cluster ${{ env.cluster_name }} --tasks $TASK_ARN
+
+          EXIT_CODE=$(aws ecs describe-tasks --cluster ${{ env.cluster_name }} --tasks $TASK_ARN --query "tasks[0].containers[0].exitCode" --output text)
+          echo "Migration exit code: $EXIT_CODE"
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "❌ Flyway migrations failed"
+            exit 1
+          fi
+          echo "✅ Flyway migrations completed successfully"
+
+      - name: Update Worker service
+        run: |
+          aws ecs update-service \
+          --cluster ${{ env.cluster_name }} \
+          --service prod-worker \
+          --task-definition "$WORKER_TD" \
+          --network-configuration "awsvpcConfiguration={subnets=[${{ env.PRIVATE_SUBNETS }}],securityGroups=[${{ env.ECS_SG }}],assignPublicIp=DISABLED}" \
+          --force-new-deployment > /dev/null
+
+      - name: Update API service
+        run: |
+          aws ecs update-service \
+          --cluster ${{ env.cluster_name }} \
+          --service prod-api \
+          --task-definition "$API_TD" \
+          --network-configuration "awsvpcConfiguration={subnets=[${{ env.PRIVATE_SUBNETS }}],securityGroups=[${{ env.ECS_SG }}],assignPublicIp=DISABLED}" \
+          --force-new-deployment > /dev/null
+
+      - name: Verify rollout
+        run: |
+          set -e
+
+          echo "⏳ waiting for both services to reach a steady state..."
+          # The waiter only buys time; the verdict below is what decides the job, so a waiter
+          # timeout on a slow-but-healthy rollout must not fail the build on its own.
+          aws ecs wait services-stable --cluster ${{ env.cluster_name }} --services prod-api prod-worker \
+            || echo "waiter timed out — checking the final state anyway"
+
+          # A service that the deployment circuit breaker rolled back is also "stable", so waiting
+          # alone proves nothing: assert each service settled on the revision this run registered.
+          # rolloutState trails the steady state by a few minutes, so poll instead of reading once.
+          check_service() {
+            SERVICE=$1
+            EXPECTED=$2
+            for _ in $(seq 1 18); do
+              LINE=$(aws ecs describe-services --cluster ${{ env.cluster_name }} --services "$SERVICE" --query 'services[0].deployments[?status==`PRIMARY`]|[0].[taskDefinition,rolloutState,runningCount]' --output text 2>/dev/null || true)
+              read -r ACTUAL STATE RUNNING <<< "$LINE"
+
+              if [ "$ACTUAL" = "$EXPECTED" ] && [ "$STATE" = "COMPLETED" ]; then
+                echo "✅ $SERVICE -> $EXPECTED ($RUNNING running)"
+                return 0
+              fi
+
+              # A newer run may have overtaken this one. Landing on a LATER revision of the same
+              # family means this deploy was superseded and the run that registered it owns the
+              # verdict; the circuit breaker only ever rolls back to an EARLIER revision, which
+              # still falls through to the failure below.
+              ACTUAL_REV=${ACTUAL##*:}
+              case "$ACTUAL_REV" in
+                ''|*[!0-9]*) ;;
+                *)
+                  if [ "${ACTUAL%:*}" = "${EXPECTED%:*}" ] && [ "$ACTUAL_REV" -gt "${EXPECTED##*:}" ]; then
+                    echo "⏭  $SERVICE superseded by a newer deploy: on revision $ACTUAL_REV, this run registered ${EXPECTED##*:}"
+                    return 0
+                  fi
+                  ;;
+              esac
+
+              sleep 10
+            done
+
+            echo "❌ $SERVICE is on $ACTUAL ($STATE, $RUNNING running), expected $EXPECTED (COMPLETED)"
+            aws ecs describe-services --cluster ${{ env.cluster_name }} --services "$SERVICE" --query 'services[0].events[:5].message' --output text
+            return 1
+          }
+
+          FAILED=0
+          check_service prod-api "$API_TD" || FAILED=1
+          check_service prod-worker "$WORKER_TD" || FAILED=1
+
+          if [ "$FAILED" != "0" ]; then
+            exit 1
+          fi
