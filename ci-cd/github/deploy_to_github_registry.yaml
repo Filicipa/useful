@@ -15,10 +15,10 @@ jobs:
       contents: read
       packages: write
     env:
-      name: ghcr.io/yevhennsorganization/pizza-backend
-      ssh-key: ${{ secrets.SSH_KEY }}
-      tag: ${{ github.sha }}
-      host: ${{ secrets.ORACLE_USER }}"@"${{ secrets.ORACLE_IP }}
+      IMAGE_NAME: ghcr.io/yevhennsorganization/pizza-backend
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      IMAGE_TAG: ${{ github.sha }}
+      HOST: ${{ secrets.ORACLE_USER }}"@"${{ secrets.ORACLE_IP }}
       ghcr_user: $(echo ${{ github.repository_owner }} | tr '[A-Z]' '[a-z]')
 
     steps:
@@ -27,16 +27,16 @@ jobs:
 
       - name: Build docker image
         run: |
-          docker build . -t ${{ env.name }}:${{ env.tag }}
-          docker tag ${{ env.name }}:${{ env.tag }} ${{ env.name }}:latest
+          docker build . -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.IMAGE_NAME }}:latest
 
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
 
       - name: Push image
         run: |
-          docker push ${{ env.name }}:latest
-          docker push ${{ env.name }}:${{ env.tag }}
+          docker push ${{ env.IMAGE_NAME }}:latest
+          docker push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Setup SSH key
         run: |
@@ -45,9 +45,9 @@ jobs:
 
       - name: Start image
         run: |
-          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} ' \
           echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ env.ghcr_user }}' --password-stdin; \
-          docker pull '${{ env.name }}':latest && \
+          docker pull '${{ env.IMAGE_NAME }}':latest && \
           docker compose -f ~/backend/docker-compose.yaml up -d; \
           sudo docker image prune -af'
 

@@ -10,10 +10,10 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
     env:
-      name: ${GITHUB_REPOSITORY#*/}"-dev"
-      key: "ssh-key-scrap"
-      tag: ${{ github.sha }}
-      host: ${{ secrets.DEV_AWS_HOST }}
+      IMAGE_NAME: ${GITHUB_REPOSITORY#*/}"-dev"
+      SSH_KEY: "ssh-key-scrap"
+      IMAGE_TAG: ${{ github.sha }}
+      HOST: ${{ secrets.DEV_AWS_HOST }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -29,7 +29,7 @@ jobs:
 
       - name: Build docker
         run: |
-          sudo docker buildx build -t ${{ env.name }}:${{ env.tag }} --platform linux/arm/v8 --output type=docker .
+          sudo docker buildx build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --platform linux/arm/v8 --output type=docker .
       #  --platform linux/amd64,linux/arm64,linux/arm/v8
       - name: Show images
         run: |
@@ -37,23 +37,23 @@ jobs:
 
       - name: Save image
         run: |
-          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
+          docker save -o ${{ env.IMAGE_NAME }}.tar ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Save secret key
         run: |
-          echo "${{ secrets.DEV_AWS_SSH }}" > ${key}
-          sudo chmod 400 ${key}
+          echo "${{ secrets.DEV_AWS_SSH }}" > ${env.SSH_KEY}
+          sudo chmod 400 ${env.SSH_KEY}
 
       - name: Copy image
         run: |
-          scp -i ${key} -o "StrictHostKeyChecking no" ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+          scp -i ${env.SSH_KEY} -o "StrictHostKeyChecking no" ${{ env.IMAGE_NAME }}.tar ${{ env.HOST }}:${{ env.IMAGE_NAME }}.tar
 
       - name: Start image
         run: |
-          ssh -i ${key} -o "StrictHostKeyChecking no" ${{ env.host }} ' \
-          sudo docker load -i '${{ env.name }}'.tar; \
-          sudo docker stop '${{ env.name }}' || true; \
+          ssh -i ${env.SSH_KEY} -o "StrictHostKeyChecking no" ${{ env.HOST }} ' \
+          sudo docker load -i '${{ env.IMAGE_NAME }}'.tar; \
+          sudo docker stop '${{ env.IMAGE_NAME }}' || true; \
           sudo docker run --log-driver json-file --log-opt max-size=10m --log-opt max-file=1 -d --restart always \
-          -p '${{ vars.DEV_PORT }}':'${{ vars.DEV_PORT }}' --name '${{ env.name }}'-new '${{ env.name }}':'${{ env.tag }}'; \
-          sudo docker rm '${{ env.name }}' || true; sudo docker rmi $(sudo docker images -q) || true; \
-          sudo docker rename '${{ env.name }}'-new '${{ env.name }}'; rm '${{ env.name }}'-'${{ env.tag }}'.tar'
+          -p '${{ vars.DEV_PORT }}':'${{ vars.DEV_PORT }}' --name '${{ env.IMAGE_NAME }}'-new '${{ env.IMAGE_NAME }}':'${{ env.IMAGE_TAG }}'; \
+          sudo docker rm '${{ env.IMAGE_NAME }}' || true; sudo docker rmi $(sudo docker images -q) || true; \
+          sudo docker rename '${{ env.IMAGE_NAME }}'-new '${{ env.IMAGE_NAME }}'; rm '${{ env.IMAGE_NAME }}'-'${{ env.IMAGE_TAG }}'.tar'

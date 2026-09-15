@@ -12,8 +12,8 @@ jobs:
   Build_Deploy_files:
     runs-on: ubuntu-22.04
     env:
-      host: ${{ vars.DEV_HOST_NAME }}@${{ vars.DEV_HOST_IP }}
-      ssh_key: "${{ secrets.DEV_SSH_KEY }}"
+      HOST: ${{ vars.DEV_HOST_NAME }}@${{ vars.DEV_HOST_IP }}
+      SSH_KEY: "${{ secrets.DEV_SSH_KEY }}"
 
     steps:
       - name: Checkout repository
@@ -21,7 +21,7 @@ jobs:
 
       - name: Add SSH key
         run: |
-          echo "${{ env.ssh_key }}" > ssh-key.pem
+          echo "${{ env.SSH_KEY }}" > ssh-key.pem
           sudo chmod 400 ssh-key.pem
 
       - name: Generate .env
@@ -41,7 +41,7 @@ jobs:
 
       - name: Copy files on DEV server
         run: |
-          rsync -arvz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" static/build/ ${{ env.host }}:/var/www/welocome.memelut.com
+          rsync -arvz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" static/build/ ${{ env.HOST }}:/var/www/welocome.memelut.com
 
       #####################
 
@@ -49,11 +49,11 @@ jobs:
         run: |
           scp -i ssh-key.pem -o StrictHostKeyChecking=no \
           -r static/dist/* \
-          ${{ env.host }}:/home/ubuntu/frontend_tmp/
+          ${{ env.HOST }}:/home/ubuntu/frontend_tmp/
 
       - name: Copy files into Nginx
         run: |
-          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} ' \
           sudo cp -R ~/frontend_tmp/* /var/www/frontend/public/ ; \
           sudo chmod -R www-data:www-data /var/www/frontend ; \
           sudo rm -R ~/frontend_tmp/* '

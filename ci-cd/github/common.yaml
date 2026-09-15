@@ -9,5 +9,5 @@
 
 - name: Copy image to EC2
   run: |
-    scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
-    rsync -avz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" migrations/ ${{ env.host }}:backend/migrations/
+    scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.IMAGE_NAME }}.tar ${{ env.HOST }}:${{ env.IMAGE_NAME }}.tar
+    rsync -avz --delete -e "ssh -i ssh-key.pem -o StrictHostKeyChecking=no" migrations/ ${{ env.HOST }}:backend/migrations/

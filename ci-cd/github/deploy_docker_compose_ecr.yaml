@@ -33,8 +33,8 @@ jobs:
     runs-on: ubuntu-22.04
     needs: Lint
     env:
-      name: ${GITHUB_REPOSITORY#*/}
-      tag: ${{ github.sha }}
+      IMAGE_NAME: ${GITHUB_REPOSITORY#*/}
+      IMAGE_TAG: ${{ github.sha }}
       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
 
@@ -44,8 +44,8 @@ jobs:
 
       - name: Build docker image
         run: |
-          docker build . -t ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
-          docker tag ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }} ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
+          docker build . -t ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -60,15 +60,15 @@ jobs:
 
       - name: Push Docker image to ECR
         run: |
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:${{ env.tag }}
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.name }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
   Deploy:
     needs: Build
     runs-on: ubuntu-22.04
     env:
-      host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
-      ssh-key: "${{ secrets.DEV_SSH_KEY }}"
+      HOST: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
+      SSH_KEY: "${{ secrets.DEV_SSH_KEY }}"
 
     steps:
       - name: Generate SSH key
@@ -78,7 +78,7 @@ jobs:
 
       - name: Pull and update services
         run: |
-          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} ' \
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS \
           --password-stdin ${{ env.ECR_REGISTRY }} ; \
           docker compose -f backend/compose.yaml pull && \

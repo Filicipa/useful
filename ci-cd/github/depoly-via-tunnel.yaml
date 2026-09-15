@@ -7,11 +7,11 @@ on:
       - main
 
 env:
-  ssh-key: "${{ secrets.PROD_SSH_KEY }}"
-  host: "${{ vars.PROD_NAME }}@${{ vars.PROD_IP }}"
+  SSH_KEY: "${{ secrets.PROD_SSH_KEY }}"
+  HOST: "${{ vars.PROD_NAME }}@${{ vars.PROD_IP }}"
   proxy_ssh: "${{ vars.PROD_PROXY_NAME }}@${{ vars.PROD_PROXY_IP }}"
-  name: "token-monitoring-bot"
-  tag: latest
+  IMAGE_NAME: "token-monitoring-bot"
+  IMAGE_TAG: latest
 
 jobs:
   Build:
@@ -22,11 +22,11 @@ jobs:
 
       - name: Build docker image
         run: |
-          docker build . -t ${{ env.name }}:${{ env.tag }}
+          docker build . -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Save docker image
         run: |
-          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
+          docker save -o ${{ env.IMAGE_NAME }}.tar ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Generate SSH key
         run: |
@@ -40,7 +40,7 @@ jobs:
             -o ProxyCommand="ssh -i ssh-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.proxy_ssh }} -W %h:%p" \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
-            ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+            ${{ env.IMAGE_NAME }}.tar ${{ env.HOST }}:${{ env.IMAGE_NAME }}.tar
 
   Deploy:
     needs:
@@ -58,7 +58,7 @@ jobs:
             -o ProxyCommand="ssh -i ssh-key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ env.proxy_ssh }} -W %h:%p" \
             -o StrictHostKeyChecking=no \
             -o UserKnownHostsFile=/dev/null \
-            ${{ env.host }} ' \
-            sudo docker load -i "${{ env.name }}.tar" && \
+            ${{ env.HOST }} ' \
+            sudo docker load -i "${{ env.IMAGE_NAME }}.tar" && \
             sudo docker compose -f backend/compose.yaml up -d && \
             sudo docker image prune -af'

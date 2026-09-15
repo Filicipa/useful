@@ -8,10 +8,10 @@ on:
     paths-ignore:
       - ".github/workflows/**"
 env:
-  name: ${GITHUB_REPOSITORY#*/}"-dev"
-  ssh-key: ${{ secrets.DEV_SSH_KEY }}
-  tag: ${{ github.sha }}
-  host: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
+  SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
+  IMAGE_NAME: ${GITHUB_REPOSITORY#*/}"-dev"
+  IMAGE_TAG: ${{ github.sha }}
+  HOST: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
 
 jobs:
   Build:
@@ -22,11 +22,11 @@ jobs:
 
       - name: Build docker image
         run: |
-          docker build . -t ${{ env.name }}:${{ env.tag }}
+          docker build . -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Save docker image
         run: |
-          docker save -o ${{ env.name }}.tar ${{ env.name }}:${{ env.tag }}
+          docker save -o ${{ env.IMAGE_NAME }}.tar ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Generate SSH key
         run: |
@@ -35,7 +35,7 @@ jobs:
 
       - name: Copy image to EC2
         run: |
-          scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.name }}.tar ${{ env.host }}:${{ env.name }}.tar
+          scp -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.IMAGE_NAME }}.tar ${{ env.HOST }}:${{ env.IMAGE_NAME }}.tar
 
   Deploy:
     runs-on: ubuntu-22.04
@@ -47,9 +47,9 @@ jobs:
 
       - name: Start image
         run: |
-          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.host }} ' \
-          sudo docker load -i '${{ env.name }}'.tar && \
-          sudo docker stop '${{ env.name }}' ; \
+          ssh -i ssh-key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} ' \
+          sudo docker load -i '${{ env.IMAGE_NAME }}'.tar && \
+          sudo docker stop '${{ env.IMAGE_NAME }}' ; \
           sudo docker run -d --restart always -p '${{ vars.PORT }}':'${{ vars.PORT }}' \
           -e DATABASE_URL='${{ secrets.DATABASE_URL }}' \
           -e HASHER_IV='${{ secrets.HASHER_IV}}' \
@@ -62,7 +62,7 @@ jobs:
           -e HOST='${{ vars.HOST }}' \
           -e PORT='${{ vars.PORT }}' \
           --network weway \
-          --name '${{ env.name }}'-new '${{ env.name }}':'${{ env.tag }}' && \
-          sudo docker rm '${{ env.name }}' && sudo docker rmi $(sudo docker images -q); \
-          sudo docker rename '${{ env.name }}'-new '${{ env.name }}' && \
-          rm '${{ env.name }}'.tar'
+          --name '${{ env.IMAGE_NAME }}'-new '${{ env.IMAGE_NAME }}':'${{ env.IMAGE_TAG }}' && \
+          sudo docker rm '${{ env.IMAGE_NAME }}' && sudo docker rmi $(sudo docker images -q); \
+          sudo docker rename '${{ env.IMAGE_NAME }}'-new '${{ env.IMAGE_NAME }}' && \
+          rm '${{ env.IMAGE_NAME }}'.tar'

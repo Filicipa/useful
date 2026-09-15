@@ -6,8 +6,8 @@ on:
       - master
 
 env:
-  name: "filicipa/webpage-circus"
-  tag: ${{ github.sha }}
+  IMAGE_NAME: "filicipa/webpage-circus"
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   CI:
@@ -30,7 +30,7 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: "${{ env.name }}:${{ env.tag }}"
+          tags: "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
 
   CD:
     needs: "CI"
@@ -45,7 +45,7 @@ jobs:
 
       - name: Update image tag in circus.yaml with yq
         run: |
-          yq e ".container.image = \"${{ env.name }}:${{ env.tag }}\"" -i argocd-repo/HelmCharts/MyChart1/values_dev.yaml
+          yq e ".container.image = \"${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}\"" -i argocd-repo/HelmCharts/MyChart1/values_dev.yaml
 
       - name: Commit and push
         run: |
@@ -53,5 +53,5 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
-          git commit -m "Update circus image tag to ${{ env.tag }}"
+          git commit -m "Update circus image tag to ${{ env.IMAGE_TAG }}"
           git push
