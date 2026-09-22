@@ -37,11 +37,6 @@ prometheus.exporter.unix "node_exporter" {
   disable_collectors = ["rapl"] // Отключение специфичных метрик питания процессора
 }
 
-// Замена контейнера 'nginx-prometheus-exporter'. Собирает статус веб-сервера.
-prometheus.exporter.nginx "nginx_exporter" {
-  address = "http://192.168.18.8:9099/nginx_status"
-}
-
 // Замена контейнера 'postgres-exporter'. Подключается к БД и собирает метрики СУБД.
 prometheus.exporter.postgres "postgres_exporter" {
   data_source_names = ["postgresql://user:password@postgres:5432/db?sslmode=disable"]
@@ -62,7 +57,6 @@ prometheus.exporter.postgres "postgres_exporter" {
 // Замена контейнера 'cadvisor'. Собирает статистику утилизации ресурсов контейнерами Docker.
 prometheus.exporter.cadvisor "cadvisor" {
   docker_only = true
-  rootfs_path = "/rootfs" // Путь к корню хоста внутри контейнера Alloy
 }
 
 // --- Шаг 2.2: Централизованный опрос (Scrape) и объединение целей ---
@@ -73,7 +67,6 @@ prometheus.scrape "exporters_scraper" {
   // Функция concat() склеивает списки таргетов со всех четырех экспортеров в один общий массив
   targets = concat(
     prometheus.exporter.unix.node_exporter.targets,
-    prometheus.exporter.nginx.nginx_exporter.targets,
     prometheus.exporter.postgres.postgres_exporter.targets,
     prometheus.exporter.cadvisor.cadvisor.targets,
   )
@@ -109,25 +102,29 @@ prometheus.relabel "force_instance_label" {
 // ----------------------------------------------------------------------------
 
 // Внутренняя обработка структуры syslog перед отправкой
-loki.process "syslog_pipeline" {
-  // Извлекаем имя хоста, приславшего лог, и превращаем в постоянный поисковый тег
-  stage.relabel {
-    rule {
-      source_labels = ["__syslog_message_hostname"]
-      target_label  = "hostname"
+loki.relabel "syslog_labels" {
+  forward_to = []
+
+  rule {
+    source_labels = ["__syslog_message_hostname"]
+    target_label  = "hostname"
+  }
+}
+
+loki.source.syslog "syslog_api" {
+  listener {
+    address       = "0.0.0.0:1514"
+    protocol      = "tcp"
+    syslog_format = "rfc5424"
+
+    labels = {
+      job     = "api_syslog",
+      service = "api",
     }
   }
 
-  forward_to = [loki.write.loki_backend.receiver]
-}
-
-// Запускает сетевой слушатель (сервер). Он открывает порт 1514 и ждет логи от приложений.
-loki.source.syslog "syslog_api" {
-  listener {
-    address = "0.0.0.0:1514"
-    labels  = { job = "api_syslog", service = "api" } // Базовые маркеры для этого источника
-  }
-  forward_to = [loki.process.syslog_pipeline.receiver]
+  relabel_rules = loki.relabel.syslog_labels.rules
+  forward_to   = [loki.write.loki_backend.receiver]
 }
 
 // ----------------------------------------------------------------------------
@@ -174,14 +171,10 @@ discovery.relabel "docker_main_relabel" {
 
   rule {
     source_labels = ["__meta_docker_container_name"]
-    regex         = r"\/?(.*)" // Отрезаем ведущий слэш из имени контейнера, который отдает Docker API
+    regex         = "/?(.*)" // Отрезаем ведущий слэш из имени контейнера, который отдает Docker API
     target_label  = "container_name"
   }
 
-  rule {
-    source_labels = ["__meta_docker_container_id"]
-    target_label  = "container_id"
-  }
 }
 
 // Парсинг внутренней структуры самого лога
@@ -193,12 +186,17 @@ loki.process "docker_main_pipeline" {
       msg   = "message",
     }
   }
-
+  stage.labels {
+    values = {
+      log_level = "level",
+    }
+  }
   forward_to = [loki.write.loki_backend.receiver]
 }
 
 // Финальный сборщик логов Docker: связывает воедино отфильтрованные таргеты и пайплайн парсинга
 loki.source.docker "docker_main_source" {
+  host       = "unix:///var/run/docker.sock"
   targets    = discovery.relabel.docker_main_relabel.output
   forward_to = [loki.process.docker_main_pipeline.receiver]
 }
@@ -224,13 +222,8 @@ discovery.relabel "docker_filter_relabel" {
 
   rule {
     source_labels = ["__meta_docker_container_name"]
-    regex         = r"\/?(.*)"
+    regex         = "/?(.*)"
     target_label  = "container_name"
-  }
-
-  rule {
-    source_labels = ["__meta_docker_container_id"]
-    target_label  = "container_id"
   }
 
   // Принудительный статический лейбл инстанса для логов этой группы
@@ -245,7 +238,7 @@ loki.process "docker_filter_pipeline" {
   // Шаг 1: Ищем ключевые слова (INFO|WARN|ERROR) в сырой строке текста лога.
   // Нашедшееся слово временно помещаем в переменную <level> благодаря именованной группе (?P<level>...)
   stage.regex {
-    expression = r"\b(?P<level>INFO|WARN|ERROR|FATAL|DEBUG|LOG)\b"
+    expression = `\b(?P<level>INFO|WARN|ERROR|FATAL|DEBUG|LOG)\b`
   }
 
   // Шаг 2: Извлекаем значение из переменной 'level' и превращаем его в индексируемый лейбл лога 'log_level'
@@ -260,6 +253,7 @@ loki.process "docker_filter_pipeline" {
 
 // Сборщик логов для группы docker-filter
 loki.source.docker "docker_filter_source" {
+  host       = "unix:///var/run/docker.sock"
   targets    = discovery.relabel.docker_filter_relabel.output
   forward_to = [loki.process.docker_filter_pipeline.receiver]
 }

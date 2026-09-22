@@ -30,11 +30,12 @@ scrape_configs:
         replacement: <example>
 
     pipeline_stages:
-      - docker: {}
       - json:
           expressions:
             level: log_level
             msg: message
+      - labels:
+          log_level: level
 
   - job_name: "api"
     syslog:
@@ -58,7 +59,7 @@ scrape_configs:
 
   - job_name: docker-filter
     docker_sd_configs:
-      - HOST: "unix:///var/run/docker.sock"
+      - host: "unix:///var/run/docker.sock"
         refresh_interval: 5s
         filters:
           - name: name
@@ -75,9 +76,8 @@ scrape_configs:
         replacement: compound-integration-kit-dev
 
     pipeline_stages:
-      - docker: {}
       - regex:
-          expression: "\b(?P<level>INFO|WARN|ERROR|FATAL|DEBUG|LOG)\b"
+          expression: "\\b(?P<level>INFO|WARN|ERROR|FATAL|DEBUG|LOG)\\b"
       - labels:
           log_level: level
     # Parse json

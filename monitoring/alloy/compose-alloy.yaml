@@ -11,11 +11,13 @@ services:
       - /var/run:/var/run:ro
       - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
-      - /log:/log:ro
+      - /var/log:/log:ro
       # Volumes для сбора метрик железа (взамен Node Exporter):
+      - /sys:/sys:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
       - /:/rootfs:ro
       - ./data_promtail:/data/promtail
+      - ./alloy_storage:/var/lib/alloy/data
     networks:
       - monitoring
