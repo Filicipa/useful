@@ -48,7 +48,6 @@ scrape_configs:
         target_label: "hostname"
 
   - job_name: system
-    pipeline_stages:
     static_configs:
       - targets:
           - localhost

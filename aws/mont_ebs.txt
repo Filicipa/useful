@@ -9,7 +9,9 @@ sudo mount /dev/xvdf /data
 sudo cp /etc/fstab /etc/fstab.orig
 sudo blkid
 ### add in fstab
-UUID=3aed96e6-250e-4498-8aa5-3405ea372b2a  /data  xfs  defaults,nofail  0  2
-
+UUID=1e8d7b72-b3bf-4f5d-a923-8d241ab7f242  /data  xfs  defaults,nofail  0  2
+UUID=1e8d7b72-b3bf-4f5d-a923-8d241ab7f242  /data  ext4  defaults,nofail  0  2
+UUID=40db8097-a3e3-422a-82a1-3a0d74536576  /home/ubuntu/services/postgres_data  ext4  defaults,nofail  0  2
 sudo umount /data
+sudo systemctl daemon-reload
 sudo mount -a
