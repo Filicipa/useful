@@ -7,3 +7,6 @@ CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 ```sql
 SELECT count(*) FROM pg_stat_statements;
 ```
+
+#### Check ssl
+`curl -fsS http://127.0.0.1:9187/metrics | grep '^pg_up'`

@@ -15,6 +15,24 @@ services:
     networks:
       - backend
 
+  postgres_exporter_ssl:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter_ssl
+    restart: unless-stopped
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_URI: "postgres:5432/compound_integration_api?sslmode=verify-full&sslrootcert=/certs/ca.crt"
+      DATA_SOURCE_USER: postgres
+      DATA_SOURCE_PASS: ${POSTGRES_EXPORTER_PASSWORD}
+    volumes:
+      - ./certs/ca.crt:/certs/ca.crt:ro
+    command:
+      - "--collector.stat_statements"
+      - "--collector.stat_statements.limit=30"
+    networks:
+      - backend
+
 networks:
   backend:
     name: backend
