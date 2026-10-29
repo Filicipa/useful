@@ -23,7 +23,7 @@ services:
     image: backend:latest
     container_name: backend
     env_file: .env
-    restart: always
+    restart: unless-stopped
     networks:
       - magnify
     logging: *logging

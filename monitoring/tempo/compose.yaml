@@ -2,7 +2,7 @@ services:
   tempo:
     image: grafana/tempo:2.4.1
     container_name: tempo
-    restart: always
+    restart: unless-stopped
     command: ["-config.file=/etc/tempo.yaml"]
     volumes:
       - ./tempo.yaml:/etc/tempo.yaml

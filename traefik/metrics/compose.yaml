@@ -1,7 +1,7 @@
 services:
   prometheus:
     image: prom/prometheus
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus-data:/prometheus
@@ -15,7 +15,7 @@ services:
       - leaderboard-calculation
   grafana:
     image: grafana/grafana-enterprise
-    restart: always
+    restart: unless-stopped
     volumes:
       - grafana-data:/var/lib/grafana
     labels:

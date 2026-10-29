@@ -2,7 +2,7 @@ services:
   nats:
     image: nats:2.14.0
     container_name: nats
-    restart: always
+    restart: unless-stopped
     ports:
       - "4222:4222"
       - "8222:8222"
@@ -20,7 +20,7 @@ services:
   nats_exporter:
     image: natsio/prometheus-nats-exporter:0.20.1
     container_name: nats_exporter
-    restart: always
+    restart: unless-stopped
     depends_on:
       - nats
     networks:

@@ -8,7 +8,7 @@ services:
   postgres:
     image: postgres:18.2
     container_name: postgres
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./postgres_data:/var/lib/postgresql
     ports:
@@ -29,7 +29,7 @@ services:
   redis:
     image: redis:alpine
     container_name: redis
-    restart: always
+    restart: unless-stopped
     ports:
       - 6379:6379
     healthcheck:
@@ -43,7 +43,7 @@ services:
   caddy:
     image: caddy:latest
     container_name: caddy
-    restart: always
+    restart: unless-stopped
     ports:
       - 80:80
       - 443:443
@@ -68,7 +68,7 @@ services:
   dozzle:
     container_name: dozzle
     image: amir20/dozzle:latest
-    restart: always
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./users.yml:/data/users.yml:ro

@@ -2,7 +2,7 @@ services:
   redis:
     image: redis:alpine
     container_name: redis
-    restart: always
+    restart: unless-stopped
     ports:
       - 6379:6379
     healthcheck:
@@ -17,7 +17,7 @@ services:
   redis-persistent:
     image: redis:7.4.0-bookworm
     container_name: redis-persistent
-    restart: always
+    restart: unless-stopped
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
     ports:

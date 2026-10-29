@@ -2,9 +2,9 @@ services:
   ganache:
     image: trufflesuite/ganache:latest
     container_name: ganache
-    restart: always
+    restart: unless-stopped
     command: --database.dbPath /state/stateMaxSub --wallet.defaultBalance 1000000 --miner.blockGasLimit 0x1fffffffffffff -d
-#    environment:
+    #    environment:
     ports:
       - 8545:8545
     volumes:

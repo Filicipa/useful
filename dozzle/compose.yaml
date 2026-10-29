@@ -2,7 +2,7 @@ services:
   dozzle:
     container_name: dozzle
     image: amir20/dozzle:latest
-    restart: always
+    restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./users.yml:/data/users.yml:ro

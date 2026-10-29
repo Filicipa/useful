@@ -1,7 +1,7 @@
 services:
   backend:
     image: leaderboard-calculation:latest
-    restart: always
+    restart: unless-stopped
     container_name: backend
     env_file:
       - .env.backend
@@ -20,7 +20,7 @@ services:
   redis:
     container_name: redis
     image: redis:7.2.3
-    restart: always
+    restart: unless-stopped
     #    ports:
     #      - 6379:6379
     volumes:
@@ -31,7 +31,7 @@ services:
   postgres:
     container_name: postgres
     image: postgres:16.1-alpine
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env.postgres
     #    ports:

@@ -77,7 +77,7 @@ services:
   mongo:
     image: mongo:6.0
     container_name: mongo
-    restart: always
+    restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example

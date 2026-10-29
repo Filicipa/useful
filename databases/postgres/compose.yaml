@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:18.2
     container_name: postgres
-    restart: always
+    restart: unless-stopped
     volumes:
       - ./data:/var/lib/postgresql
     ports:

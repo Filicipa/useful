@@ -2,7 +2,7 @@ services:
   mongo:
     image: mongo:8.0
     container_name: mongo
-    restart: always
+    restart: unless-stopped
     ports:
       - 27017:27017
     volumes:

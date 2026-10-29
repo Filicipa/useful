@@ -2,7 +2,7 @@ services:
   nats_exporter:
     image: natsio/prometheus-nats-exporter:0.20.1
     container_name: nats_exporter
-    restart: always
+    restart: unless-stopped
     depends_on:
       - nats
     networks:
