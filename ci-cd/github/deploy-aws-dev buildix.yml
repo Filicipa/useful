@@ -10,13 +10,13 @@ jobs:
   test-and-build:
     runs-on: ubuntu-latest
     env:
-      IMAGE_NAME: ${GITHUB_REPOSITORY#*/}"-dev"
-      SSH_KEY: "ssh-key-scrap"
+      IMAGE_NAME: ${{ github.event.repository.name }}-dev
+      SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
       IMAGE_TAG: ${{ github.sha }}
       HOST: ${{ secrets.DEV_AWS_HOST }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up environment variables
         run: |
@@ -41,16 +41,16 @@ jobs:
 
       - name: Save secret key
         run: |
-          echo "${{ secrets.DEV_AWS_SSH }}" > ${env.SSH_KEY}
-          sudo chmod 400 ${env.SSH_KEY}
+          echo "${{ secrets.DEV_AWS_SSH }}" > ssh-key.pem
+          sudo chmod 400 ssh-key.pem
 
       - name: Copy image
         run: |
-          scp -i ${env.SSH_KEY} -o "StrictHostKeyChecking no" ${{ env.IMAGE_NAME }}.tar ${{ env.HOST }}:${{ env.IMAGE_NAME }}.tar
+          scp -i ssh-key.pem -o "StrictHostKeyChecking no" ${{ env.IMAGE_NAME }}.tar ${{ env.HOST }}:${{ env.IMAGE_NAME }}.tar
 
       - name: Start image
         run: |
-          ssh -i ${env.SSH_KEY} -o "StrictHostKeyChecking no" ${{ env.HOST }} ' \
+          ssh -i ssh-key.pem -o "StrictHostKeyChecking no" ${{ env.HOST }} ' \
           sudo docker load -i '${{ env.IMAGE_NAME }}'.tar; \
           sudo docker stop '${{ env.IMAGE_NAME }}' || true; \
           sudo docker run --log-driver json-file --log-opt max-size=10m --log-opt max-file=1 -d --restart always \

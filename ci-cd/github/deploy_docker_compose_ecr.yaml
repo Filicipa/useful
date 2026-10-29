@@ -9,7 +9,7 @@ on:
       - .github/workflows/**
 
 env:
-  ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}".dkr.ecr."${{ vars.DEV_AWS_REGION }}".amazonaws.com"
+  ECR_REGISTRY: ${{ secrets.DEV_AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.DEV_AWS_REGION }}.amazonaws.com
   AWS_REGION: ${{ vars.DEV_AWS_REGION }}
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
@@ -33,14 +33,14 @@ jobs:
     runs-on: ubuntu-22.04
     needs: Lint
     env:
-      IMAGE_NAME: ${GITHUB_REPOSITORY#*/}
+      IMAGE_NAME: ${{ github.event.repository.name }}
       IMAGE_TAG: ${{ github.sha }}
       AWS_ACCESS_KEY_ID: ${{ secrets.DEV_AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DEV_AWS_SECRET_ACCESS_KEY }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build docker image
         run: |
@@ -73,7 +73,7 @@ jobs:
     steps:
       - name: Generate SSH key
         run: |
-          echo "${{ env.ssh-key }}" > ssh-key.pem
+          echo "${{ env.SSH_KEY }}" > ssh-key.pem
           sudo chmod 400 ssh-key.pem
 
       - name: Pull and update services

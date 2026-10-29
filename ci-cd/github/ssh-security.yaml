@@ -1,0 +1,123 @@
+name: DEV Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - dev
+    paths:
+      - "pnpm-lock.yaml"
+      - "apps/**"
+      - "Dockerfile"
+
+concurrency:
+  group: dev-deploy
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  Build:
+    runs-on: ubuntu-24.04
+    env:
+      IMAGE_NAME: "${{ github.event.repository.name }}-dev"
+      IMAGE_TAG: "latest" #or ${{ github.sha }}
+    outputs:
+      api: ${{ steps.filter.outputs.api }}
+      worker: ${{ steps.filter.outputs.worker }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'pnpm-lock.yaml'
+              - 'Dockerfile'
+            worker:
+              - 'apps/sync-worker/**'
+              - 'pnpm-lock.yaml'
+              - 'Dockerfile'
+
+      - name: Build docker image
+        run: |
+          docker build . -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Save docker image
+        run: |
+          docker save -o ${{ env.IMAGE_NAME }}.tar ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+      - name: Upload image
+        env:
+          SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
+          HOST: ${{ vars.DEV_NAME }}@${{ vars.DEV_IP }}
+          KNOWN_HOSTS: ${{ vars.DEV_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          eval "$(ssh-agent -s)"
+          trap 'ssh-agent -k >/dev/null 2>&1 || true' EXIT
+
+          ssh-add - <<< "$SSH_KEY"
+          unset SSH_KEY
+
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes \
+            "$HOST" upload < "${IMAGE_NAME}.tar"
+
+  Deploy-API:
+    needs: Build
+    if: needs.Build.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Deploy API
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+        with:
+          host: ${{ vars.DEV_IP }}
+          username: ${{ vars.DEV_NAME }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          fingerprint: ${{ vars.DEV_SSH_FINGERPRINT }}
+          script: deploy-api
+
+  Deploy-Worker:
+    needs: Build
+    if: needs.Build.outputs.worker == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Deploy WORKER
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+        with:
+          host: ${{ vars.DEV_IP }}
+          username: ${{ vars.DEV_NAME }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          fingerprint: ${{ vars.DEV_SSH_FINGERPRINT }}
+          script: deploy-worker
+
+  Clean-Old-Images:
+    needs:
+      - Deploy-API
+      - Deploy-Worker
+    if: |
+      !cancelled() &&
+      !failure() &&
+      (
+        needs.Deploy-API.result == 'success' ||
+        needs.Deploy-Worker.result == 'success'
+      )
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Prune
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2
+        with:
+          host: ${{ vars.DEV_IP }}
+          username: ${{ vars.DEV_NAME }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          fingerprint: ${{ vars.DEV_SSH_FINGERPRINT }}
+          script: prune-old-images

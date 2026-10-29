@@ -9,7 +9,7 @@ on:
       - ".github/workflows/**"
 env:
   SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
-  IMAGE_NAME: ${GITHUB_REPOSITORY#*/}"-dev"
+  IMAGE_NAME: ${{ github.event.repository.name }}-dev
   IMAGE_TAG: ${{ github.sha }}
   HOST: ${{ secrets.DEV_NAME }}@${{ secrets.DEV_IP }}
 
@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build docker image
         run: |
@@ -30,7 +30,7 @@ jobs:
 
       - name: Generate SSH key
         run: |
-          echo "${{ env.ssh-key }}" > ssh-key.pem
+          echo "${{ env.SSH_KEY }}" > ssh-key.pem
           sudo chmod 400 ssh-key.pem
 
       - name: Copy image to EC2
@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Generate SSH key
         run: |
-          echo "${{ env.ssh-key }}" > ssh-key.pem
+          echo "${{ env.SSH_KEY }}" > ssh-key.pem
           sudo chmod 400 ssh-key.pem
 
       - name: Start image

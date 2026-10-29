@@ -9,7 +9,7 @@ RUN npm install -g node-gyp
 RUN npm config set fetch-retry-maxtimeout 600000 -g && npm install --omit=dev
 ENV PATH /opt/node_modules/.bin:$PATH
 WORKDIR /opt/app
-COPY . .
+COPY ./ ./
 RUN npm run build
 
 FROM node:18-alpine
@@ -23,6 +23,6 @@ COPY --from=build /opt/app ./
 ENV PATH /opt/node_modules/.bin:$PATH
 
 RUN chown -R node:node /opt/app
-USER node
+USER 1000
 EXPOSE 1337
 CMD ["npm", "run", "develop"]

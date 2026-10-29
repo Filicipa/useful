@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build docker image
         run: |
@@ -40,7 +40,7 @@ jobs:
 
       - name: Setup SSH key
         run: |
-          echo "${{ env.ssh-key }}" > ssh-key.pem
+          echo "${{ env.SSH_KEY }}" > ssh-key.pem
           sudo chmod 400 ssh-key.pem
 
       - name: Start image

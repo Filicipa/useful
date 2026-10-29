@@ -5,9 +5,9 @@ services:
     restart: unless-stopped
     environment:
       - VAULT_ADDR=http://127.0.0.1:8200 # CLI внутри контейнера
-      - VAULT_API_ADDR=http://127.0.0.1:8200 # Указать адрес по которому обращаются
+      - VAULT_API_ADDR=https://example.com # Указать адрес по которому обращаются
     ports:
-      - "8200:8200"
+      - "127.0.0.1:8200:8200"
     cap_add:
       - IPC_LOCK
     volumes:

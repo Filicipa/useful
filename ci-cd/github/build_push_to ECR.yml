@@ -23,14 +23,16 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
+      # Choose one option to login
       - name: Configure AWS Credentials OIDC
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/github-oidc
           aws-region: eu-central-1
 
+      # Choose one option to login
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:

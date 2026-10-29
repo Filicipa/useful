@@ -10,9 +10,9 @@ on:
 
 env:
   AWS_REGION: ap-southeast-1
-  ECR_REGISTRY: "447725070155.dkr.ecr.ap-southeast-1.amazonaws.com"
+  ECR_REGISTRY: 447725070155.dkr.ecr.ap-southeast-1.amazonaws.com
   IMAGE_NAME: "scc-prod/cosigner"
-  IMAGE_TAG: ${GITHUB_REF#refs/*/}
+  IMAGE_TAG: ${{ github.ref_name }}
 
 permissions:
   id-token: write
@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
@@ -56,7 +56,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v6
