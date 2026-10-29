@@ -1,6 +1,6 @@
 ### PNPM ###
 FROM node:22.20.0-alpine AS base
-RUN npm i -g pnpm
+RUN npm i -g pnpm@12
 
 FROM base AS builder
 WORKDIR /app

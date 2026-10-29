@@ -3,6 +3,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_HOME=/etc/poetry
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1
 ENV PATH=$POETRY_HOME/bin:$PATH
 COPY pyproject.toml poetry.lock ./
@@ -11,7 +12,7 @@ RUN poetry install --no-root --without dev
 
 FROM python:3.12-slim AS runner
 RUN apt-get update -y && \
-    apt-get install python3-psycopg2 -y --no-install-recommends && \
+    apt-get install python3-psycopg2==2.9.13 -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
 COPY --from=builder /usr/local/bin/ /usr/local/bin/

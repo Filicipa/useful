@@ -3,8 +3,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY ./ ./
-RUN npm run build
-RUN npm ci --omit=dev
+RUN npm run build && \
+    npm ci --omit=dev
 
 FROM node:22.20.0-alpine AS run
 WORKDIR /app
@@ -12,6 +12,6 @@ WORKDIR /app
 COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 
-USER node
+USER 1000
 EXPOSE 3000
 CMD ["node", "dist/main"]

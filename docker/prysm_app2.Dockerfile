@@ -7,19 +7,21 @@ FROM node:22.20.0-alpine AS builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY ./ ./
-RUN npm run db:generate
-RUN npm run build
+RUN npm run db:generate && \
+    npm run build
 
 FROM node:22.20.0-alpine AS runner
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/dist/ ./dist
-COPY --from=builder /app/prisma ./prisma
-COPY entrypoint.sh ./
+WORKDIR /app
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/dist/ ./dist
+COPY --from=builder --chown=node:node /app/prisma ./prisma
+COPY --chown=node:node entrypoint.sh ./
 RUN chmod +x ./entrypoint.sh
+
+USER 1000
 EXPOSE 3000
 ENTRYPOINT ["./entrypoint.sh"]
-
 
 #Entrypoint.sh
 #!/bin/sh

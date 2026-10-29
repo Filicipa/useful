@@ -1,13 +1,13 @@
 FROM node:22.20.0-alpine AS base
-RUN npm i -g pnpm
+RUN npm i -g pnpm@12
 
 FROM base AS builder
 WORKDIR /app
 COPY .npmrc package.json pnpm-lock.yaml next.config.js ./
 RUN pnpm install --frozen-lockfile
 COPY ./ ./
-RUN pnpm build
-RUN pnpm prune --prod
+RUN pnpm build && \
+    pnpm prune --prod
 
 FROM base AS runner
 WORKDIR /app

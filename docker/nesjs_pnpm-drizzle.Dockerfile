@@ -1,13 +1,13 @@
 FROM node:22.20.0-alpine AS base
-RUN npm install -g pnpm
+RUN npm install -g pnpm@12
 
 FROM base AS build
 WORKDIR /app
 COPY package*.json pnpm-lock.yaml tsconfig.json ./
 RUN pnpm install --frozen-lockfile
 COPY ./ ./
-RUN pnpm run build
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm run build && \
+    pnpm install --frozen-lockfile --prod
 
 FROM base AS production
 
@@ -21,6 +21,6 @@ COPY --from=build --chown=node:node /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=build --chown=node:node /app/start.sh ./start.sh
 RUN chmod 500 ./start.sh
 
-USER node
+USER 1000
 
 ENTRYPOINT ["./start.sh"]

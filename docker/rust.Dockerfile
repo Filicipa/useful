@@ -18,13 +18,13 @@ CMD ["solana-mvrv-z-score"]
 ####################
 
 FROM rust:alpine AS builder
-RUN apk add build-base libressl-dev
+RUN apk add --no-cache build-base=0.5-r4 libressl-dev=4.3.3-r0
 WORKDIR /app
 COPY ./ .
 RUN cargo build --release
 
-FROM alpine AS runner
-RUN apk add ca-certificates
+FROM alpine:3.20 AS runner
+RUN apk add --no-cache ca-certificates=20261020-r0
 COPY --from=builder /app/target/release/solana-mvrv-z-score /
 CMD ["/solana-mvrv-z-score"]
 

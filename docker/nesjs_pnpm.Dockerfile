@@ -1,19 +1,19 @@
 FROM node:22.20.0-alpine AS base 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@12
 
 FROM base AS build
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY ./ ./
-RUN pnpm run build
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm run build && \
+    pnpm install --frozen-lockfile --prod
 
 FROM node:22.20.0-alpine AS production
 WORKDIR /app
 COPY --chown=node:node --from=build /app/node_modules ./node_modules
 COPY --chown=node:node --from=build /app/dist ./dist
 
-USER node
+USER 1000
 EXPOSE 5001
 CMD [ "node", "dist/main" ]

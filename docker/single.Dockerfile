@@ -3,7 +3,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm ci
 COPY ./ ./
-RUN npm run build ${SERVICE_NAME}
+RUN npm run build "${SERVICE_NAME}"
 
 FROM node:22.20.0-alpine as production
 ARG NODE_ENV=production
@@ -15,4 +15,4 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
 EXPOSE 8000
 ENV EXECUTION_FILE=dist/src/main
-CMD npm run migrations:prod && node ${EXECUTION_FILE}
+CMD ["npm", "run", "migrations:prod", "&&", "node ${EXECUTION_FILE}"]
