@@ -5,6 +5,8 @@ cd ~/services/certs
 ```
 ## Собственный CA
 ```bash
+openssl genrsa -out ca.key 4096
+
 openssl req -x509 -new -sha256 \
   -key ca.key \
   -days 3650 \
