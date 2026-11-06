@@ -5,13 +5,13 @@ cd ~/services/certs
 ```
 ## Собственный CA
 ```bash
-openssl genrsa -out ca.key 4096
-
 openssl req -x509 -new -sha256 \
   -key ca.key \
   -days 3650 \
   -out ca.crt \
-  -subj "/CN=Internal Docker CA"
+  -subj "/CN=Internal Docker CA" \
+  -addext "basicConstraints=critical,CA:TRUE" \
+  -addext "keyUsage=critical,keyCertSign,cRLSign"
 ```
 
 ## Сертификат PostgreSQL
@@ -50,13 +50,59 @@ openssl x509 -req \
   -days 365 -sha256 \
   -extfile redis.ext
 ```
-### Указать пользователя внутри контейнера базы данных
+## Сертификат Valkey
 ```bash
-sudo chown <user>:<user> postgres.key
-sudo chown <user>:<user> redis.key
+openssl genrsa -out valkey.key 2048
 
-sudo chmod 600 postgres.key redis.key ca.key
-sudo chmod 644 ca.crt postgres.crt redis.crt
+openssl req -new \
+  -key valkey.key \
+  -out valkey.csr \
+  -subj "/CN=valkey"
+
+printf 'subjectAltName=DNS:valkey\nextendedKeyUsage=serverAuth\n' > valkey.ext
+
+openssl x509 -req \
+  -in valkey.csr \
+  -CA ca.crt -CAkey ca.key -CAcreateserial \
+  -out valkey.crt \
+  -days 365 -sha256 \
+  -extfile valkey.ext
+```
+
+### Проверка сертификатов
+### Проверить цепочку доверия
+```bash
+openssl verify -CAfile ca.crt postgres.crt
+openssl verify -CAfile ca.crt redis.crt
+openssl verify -CAfile ca.crt valkey.crt
+```
+### Проверить SAN и назначение сертификатов
+```bash
+openssl x509 -in postgres.crt -noout -text
+openssl x509 -in redis.crt -noout -text
+openssl x509 -in valkey.crt -noout -text
+```
+### Проверка соответствия сертификатов DNS-именам
+```bash
+openssl x509 -in postgres.crt -noout -checkhost postgres
+openssl x509 -in redis.crt -noout -checkhost redis
+openssl x509 -in valkey.crt -noout -checkhost valkey
+```
+### Узнать UID/GID пользователей в образах
+```bash
+docker run --rm postgres:18.2 id postgres
+docker run --rm redis:alpine id redis
+docker run --rm valkey/valkey:9.1.0 id valkey
+```
+### Назначить владельца приватным ключам
+UID/GID определяются для конкретного Docker-образа и его версии. Проверять необходимо не только наличие пользователя, но и пользователя, от которого работает основной процесс сервиса. Приватный ключ должен быть доступен этому пользователю на чтение.
+```bash
+sudo chown <UID>:<GID> postgres.key
+sudo chown <UID>:<GID> redis.key
+sudo chown <UID>:<GID> valkey.key
+
+sudo chmod 600 postgres.key redis.key valkey.key ca.key
+sudo chmod 644 ca.crt postgres.crt redis.crt valkey.crt
 ```
 *Важно: `ca.key` не монтировать в контейнеры. Лучше хранить его отдельно от рабочего сервера, в защищённом месте. Приложениям нужен только `ca.crt`.
 ```yaml
@@ -80,19 +126,22 @@ postgres:
 ```
 #### pg_hba.conf
 ```conf
-# Unix socket
+# Local connections via Unix socket (no TCP/TLS)
+# Used for local administrative access
 local   all             all                                     trust
 
-# Local TCP
+# Local TCP connections (loopback interface)
+# TLS is not required for localhost
 host    all             all             127.0.0.1/32            trust
 host    all             all             ::1/128                 trust
 
-# Replication
+# Local replication connections
 local   replication     all                                     trust
 host    replication     all             127.0.0.1/32            trust
 host    replication     all             ::1/128                 trust
 
-# Docker / remote TCP — TLS only
+# Docker network / remote TCP connections
+# TLS is mandatory; password authentication via SCRAM-SHA-256
 hostssl all             all             all                     scram-sha-256
 ```
 #### redis.conf
@@ -109,18 +158,45 @@ tls-ca-cert-file /certs/ca.crt
 
 tls-auth-clients no
 ```
-```yaml
-redis:
-  image: redis:alpine
-  container_name: redis
-  restart: unless-stopped
-  command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
-  volumes:
-    - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
-    - ./certs:/certs:ro
-  networks:
-    - backend
+#### valkey.conf
+```conf
+bind 0.0.0.0
+protected-mode yes
+
+port 0
+tls-port 6380
+
+tls-cert-file /certs/valkey.crt
+tls-key-file /certs/valkey.key
+tls-ca-cert-file /certs/ca.crt
+
+tls-auth-clients no
 ```
+```yaml
+  redis:
+    image: redis:alpine
+    container_name: redis
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./certs:/certs:ro
+    networks:
+      - backend
+```
+```yaml
+  valkey:
+    image: valkey/valkey:9.1.0
+    container_name: valkey
+    restart: unless-stopped
+    command: ["valkey-server", "/usr/local/etc/valkey/valkey.conf"]
+    volumes:
+      - ./valkey.conf:/usr/local/etc/valkey/valkey.conf:ro
+      - ./certs:/certs:ro
+    networks:
+      - backend
+```
+
 ### Конфигурация приложения
 ```
 # PostgreSQL
@@ -129,13 +205,14 @@ PGPORT=5432
 DB_SSL=true
 DB_SSL_CA_FILE=/certs/ca.crt
 
-# Redis
+# Redis или Valkey — в зависимости от используемого сервиса
 REDIS_HOST=redis
+# REDIS_HOST=valkey
 REDIS_PORT=6380
 REDIS_TLS=true
 REDIS_TLS_CA_FILE=/certs/ca.crt
 ```
-### Монтируем сертификаты
+### Монтируем сертификаты в приложение
 ```
 volumes:
   - ./certs/ca.crt:/certs/ca.crt:ro
@@ -159,6 +236,11 @@ docker run --rm --network backend postgres:18.2 \
   psql "host=postgres port=5432 user=postgres dbname=compound_integration_api sslmode=disable connect_timeout=5" \
   -c "SELECT 1;"
 ```
+```bash
+docker exec redis redis-cli --tls \
+  --cacert /certs/ca.crt \
+  -h redis -p 6380 PING
+```
 #### Redis — plaintext должен быть отключён:
 ```bash
 docker exec redis redis-cli --tls \
@@ -172,3 +254,24 @@ port
 tls-port
 6380
 ```
+```bash
+docker exec redis redis-cli -h redis -p 6379 PING
+```
+Ожидаем отказ соединения.
+
+#### Valkey 
+```bash
+docker exec valkey valkey-cli --tls \
+  --cacert /certs/ca.crt \
+  -h valkey -p 6380 PING
+```
+
+```bash
+docker exec valkey valkey-cli --tls \
+  --cacert /certs/ca.crt \
+  -h valkey -p 6380 CONFIG GET port tls-port
+  ```
+  ```bash
+  docker exec valkey valkey-cli -h valkey -p 6379 PING
+  ```
+  Ожидаем отказ соединения.
