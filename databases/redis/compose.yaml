@@ -41,5 +41,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    # For TLS connection
+    # healthcheck:
+    #   test:
+    #     - CMD
+    #     - redis-cli
+    #     - --tls
+    #     - --cacert
+    #     - /certs/ca.crt
+    #     - -h
+    #     - 127.0.0.1
+    #     - -p
+    #     - "6380"
+    #     - ping
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 5
     networks:
       - backend
