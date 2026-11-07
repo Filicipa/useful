@@ -159,6 +159,7 @@ tls-key-file /certs/redis.key
 tls-ca-cert-file /certs/ca.crt
 
 tls-auth-clients no
+tls-protocols "TLSv1.2 TLSv1.3"
 ```
 #### valkey.conf
 ```conf
@@ -173,6 +174,7 @@ tls-key-file /certs/valkey.key
 tls-ca-cert-file /certs/ca.crt
 
 tls-auth-clients no
+tls-protocols "TLSv1.2 TLSv1.3"
 ```
 ```yaml
   redis:
@@ -197,27 +199,6 @@ tls-auth-clients no
       - ./certs:/certs:ro
     networks:
       - backend
-```
-
-### Конфигурация приложения
-```
-# PostgreSQL
-PGHOST=postgres
-PGPORT=5432
-DB_SSL=true
-DB_SSL_CA_FILE=/certs/ca.crt
-
-# Redis или Valkey — в зависимости от используемого сервиса
-REDIS_HOST=redis
-# REDIS_HOST=valkey
-REDIS_PORT=6380
-REDIS_TLS=true
-REDIS_TLS_CA_FILE=/certs/ca.crt
-```
-### Монтируем сертификаты в приложение
-```
-volumes:
-  - ./certs/ca.crt:/certs/ca.crt:ro
 ```
 ## Проверка
 #### PostgreSQL — все подключения должны использовать TLS:
@@ -256,6 +237,7 @@ port
 tls-port
 6380
 ```
+Проверка отключения незащищенного соединения
 ```bash
 docker exec redis redis-cli -h redis -p 6379 PING
 ```
@@ -272,8 +254,30 @@ docker exec valkey valkey-cli --tls \
 docker exec valkey valkey-cli --tls \
   --cacert /certs/ca.crt \
   -h valkey -p 6380 CONFIG GET port tls-port
-  ```
-  ```bash
+```
+Проверка отключения незащищенного соединения
+```bash
   docker exec valkey valkey-cli -h valkey -p 6379 PING
   ```
-  Ожидаем отказ соединения.
+Ожидаем отказ соединения.
+
+### Конфигурация приложения
+```
+# PostgreSQL
+PGHOST=postgres
+PGPORT=5432
+DB_SSL=true
+DB_SSL_CA_FILE=/certs/ca.crt
+
+# Redis или Valkey — в зависимости от используемого сервиса
+REDIS_HOST=redis
+# REDIS_HOST=valkey
+REDIS_PORT=6380
+REDIS_TLS=true
+REDIS_TLS_CA_FILE=/certs/ca.crt
+```
+### Монтируем сертификаты в приложение
+```
+volumes:
+  - ./certs/ca.crt:/certs/ca.crt:ro
+```
