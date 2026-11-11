@@ -28,7 +28,8 @@
                 "ecr:UploadLayerPart",
                 "ecr:InitiateLayerUpload",
                 "ecr:BatchCheckLayerAvailability",
-                "ecr:PutImage"
+                "ecr:PutImage",
+                "ecr:BatchGetImage"
             ],
             "Resource": [
                 "arn:aws:ecr:<aws_region>:<account_id>:repository/<repo_name>"
