@@ -9,6 +9,7 @@
                 "ecr:UploadLayerPart",
                 "ecr:InitiateLayerUpload",
                 "ecr:BatchCheckLayerAvailability",
+                "ecr:BatchGetImage",
                 "ecr:PutImage"
             ],
             "Resource": "*"
